@@ -15,7 +15,9 @@
 #' **outputchar** The 'text' to use when plottint output synapses.  defaults to "\U25B2" (a unicode triangle).  
 #'
 #'
-colour_synapses_by_partner <- function(main, partners = NULL, io = "both", cols = NULL, neuroncols = "black", pointsize = 1, inputchar = "\U25CF", outputchar = "\U25B2"){
+colour_synapses_by_partner <- function(main, partners = NULL, io = c("both", "input", "output","autapse"),
+                                       cols = NULL, neuroncols = "black", pointsize = 1, inputchar = "\U25CF", outputchar = "\U25B2"){
+  io=match.arg(io)
   if (is.null(partners) && io != "autapse"){
     stop("Partners must be provided unless io is set as 'autapse'")
   }

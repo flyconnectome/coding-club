@@ -11,6 +11,8 @@ n1=read.neuron.catmaid()
 n2=read.neuron.catmaid()
 synapses <- function(skid, pre.skid1, pre.skid2) {
   #get neuron of interest (skid)
+  # catmaid_skids function allows you to pass in names or annotations - also checks that you only get one back
+  skid=catmaid_skids(skid, several.ok = FALSE)
   neuron = read.neuron.catmaid(skid)
   neuron_data = catmaid_get_connectors_between(post_skids = skid)
   
