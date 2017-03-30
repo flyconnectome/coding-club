@@ -19,6 +19,7 @@ print(C)
 print(G)
 print(t)
 
-
-
-
+# one liner
+# strsplit with empty split turns a string into a vector of separate chars
+# see ?strsplit
+table(strsplit(s, split=""))
