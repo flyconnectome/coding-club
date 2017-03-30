@@ -93,7 +93,20 @@ percentGC <- function(dnastr){
 # TGGGAACCTGCGGGCAGTAGGTGGAAT")
 # Rosalind_0808
 # 60.91954
-#whitespace is a bitch
 
 
+#6 - Counting point mutations
+hammingDistance <- function(path){
+  input = readChar(path, file.info(path)$size)
+  input.split = strsplit(input, "\n")[[1]]
+  s = input.split[1]; t = input.split[2]
+  s.split = strsplit(s, "")[[1]]; t.split = strsplit(t, "")[[1]]
+  
+  match = sapply(1:length(s.split), function(x){ s.split[x] == t.split[x] })
+  
+  length(s.split) - sum(match)
+}
+#GAGCCTACTAACGGGAT
+#CATCGTAATGACGGCCT
+#[1] 7
 
