@@ -9,6 +9,6 @@ for (i in 1:nchar(s)) {
 }
 print(result)
 
-
-
-
+# Or a quick way to do the same
+result2=gsub("T","U", s, fixed = T)
+stopifnot(result==result2)
