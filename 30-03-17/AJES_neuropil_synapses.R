@@ -3,7 +3,7 @@
 
 neuropil_synapses <- function(skid) {
   #Read neuron to fafb space
-  n <- fetchn_fafb(skid)[[1]]
+  n <- fetchn_fafb(skid, mirror = FALSE)[[1]]
   print(head(n))
   #Determine the 3d points of both incoming and outgoing connectors
   incoming_connectors <- subset(connectors(n), prepost==1)
@@ -36,3 +36,5 @@ neuropil_synapses <- function(skid) {
   Synapses_in_neuropils_df<-cbind(outgoing_dataframe, incoming_dataframe)
   View(Synapses_in_neuropils_df)
 }
+
+Amelia<-neuropil_synapses(2333007)
