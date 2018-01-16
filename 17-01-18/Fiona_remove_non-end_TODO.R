@@ -21,7 +21,7 @@ catmaid_remove_traced_TODO <- function(skid){
       }
     }
     if(messages != ""){ return = paste0("There were some errors; see below\n",messages) }
-    else{ return = "Success!"}
+    else{ return = paste0("Successfully removed ", length(r), " non-end TODO tags")}
   }
   return(return)
 }
