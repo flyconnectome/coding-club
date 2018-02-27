@@ -6,9 +6,9 @@ gs_ls()
 y5 <- gs_title("Upstream SMP (PAM-y5)")
 
 #Problem solve:
-gs_read(ss = y5, ws = 4, range = "B52:B73")
+gs_read(ss = y5, ws = 5, range = "B52:B73")
 as.list(gs_read(ss = y5, ws = 4, range = "B52:B73"))
-skids<- as.list(gs_read(ss = y5, ws = 4, range = "B52:B73"), col_names = FALSE)[[1]] #misses first one in list
+skids<-as.list(gs_read(ss = y5, ws = 5, range = "A2:A73"), col_names = FALSE, skip = 1)[[1]]
 
 
 library(elmr)
@@ -19,6 +19,6 @@ index <- which(names(df)=="neuron 3336471 JJ- FW-B6")
 
 #Function that updates google sheet to add info about already connected neurons
 neuron_names <- as.vector(catmaid_get_neuronnames(skids))
-#gs_edit_cells(y5, ws = 4, input = neuron_names, anchor = "M53", byrow = FALSE)
+gs_edit_cells(y5, ws = 5, input = neuron_names, anchor = "K4", byrow = FALSE)
 
 
