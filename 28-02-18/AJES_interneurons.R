@@ -1,5 +1,9 @@
 #R club: Identify interneurons downstream and upstream of given neurons.
 
+#Update: comments from R club...
+#Find a way to find other neurons of different configurations, and a way of passing how many layers you want to the function
+#Also edit so that I make a function of finding interneurons that can be passed to the first, second, ect layers.
+
 #Working:
 #Search all skids downstream of given neurons.
 catmaid_get_connectors_between(pre_skids = 2109445)$post_skid

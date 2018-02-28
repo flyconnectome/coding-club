@@ -9,3 +9,7 @@ skids <- catmaid_skids("annotation:AJES_y5_upstream_SEZ")![c(2,5, 6, 7, 12)]
 
 #Answer: Use ! for logical functions, to get actual values use minus sign.
 allskids[-c(2,5, 6, 7, 12)]
+
+
+#Comments from discussion from R club:
+#! is used for logical functions, gives opposite of TRUE/FALSE.
