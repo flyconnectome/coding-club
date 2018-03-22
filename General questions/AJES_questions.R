@@ -17,3 +17,17 @@ x[lengths(x) == 0] <- NA
 y <- lapply(c(1:length(skids)), function (x) catmaid_get_annotations_for_skeletons(skids[x])$annotation[grep(as.character("AJES_y5_upstream"),catmaid_get_annotations_for_skeletons(skids[x])$annotation)])
 y[lengths(y) == 0] <- NA
 df <- data.frame("annotation_lin"= unlist(x), "annotation_neuropil"= unlist(y), names, skids)
+
+
+#####
+allskids <-catmaid_skids("annotation:AJES_y5_upstream_SEZ")
+mskids <-catmaid_skids("annotation:AJES_y5_upstream_SEZ")[c(2,5, 6, 7, 12)]
+
+skids <- catmaid_skids("annotation:AJES_y5_upstream_SEZ")![c(2,5, 6, 7, 12)] 
+#throws error, I wish to get everything that is not these skids
+
+#Answer: Use ! for logical functions, to get actual values use minus sign.
+allskids[-c(2,5, 6, 7, 12)]
+
+#Comments from discussion from R club:
+#! is used for logical functions, gives opposite of TRUE/FALSE.
