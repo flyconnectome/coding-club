@@ -5,7 +5,7 @@ data <- gs_read(ss = y5, ws = 2, range = "K3:K100")
 neuron_name <- data$`Final Neuron ID`
 
 #sampled y5-PAM upstream neurons
-neuron_name <- unlist(lapply(c(2:6,8), function(x) as.data.frame(gs_read(ss = y5, ws = x, range = "K3:K100"))[,1]))
+neuron_name <- unlist(lapply(c(2:7), function(x) as.data.frame(gs_read(ss = y5, ws = x, range = "L3:L500"))[,1]))
 
 ###### Give function list of neuron names or skids and it will plot if it is a new neuron, an exisiting neuron, or a gap in the list (ie. a fragment) ####
 
@@ -37,15 +37,17 @@ return(sum_up)
 cumulative_count <- sampling(neuron_name)
 
 #####plot of cumulative new neurons against profiles sampled ####
+par(mar = c(5,5,5,5))
 plot(1:nrow(cumulative_count), cumulative_count$Cumulative.new.neurons, xlab = list('Profiles sampled'), ylab = list('Number of Neurons'), 
-     cex.lab=1.5, cex.axis=1.5, xlim=c(0,350),ylim=c(0,150), cex=0.7,
+     cex.lab=1.5, cex.axis=1.5, xlim=c(0,400),ylim=c(0,200), cex=0.7,
      pch = 19,
      col = color <- c(replicate(25, "red"),
                       replicate(69, "blue"), 
-                      replicate(38, "orange"), 
+                      replicate(69, "orange"), 
                       replicate(69, "darkolivegreen4"), 
                       replicate(65, "magenta3"),
-                      replicate(84, "mediumpurple3"))
+                      replicate(84, "mediumpurple3"),
+                      replicate(101, "pink"))
      )
-legend(300,75, c("PAM(5)", "PAM(6)", "PAM(7)", "PAM(13)", "PAM(17)", "PAM(1)"), c("red", "blue", "orange","darkolivegreen4", "magenta3", "mediumpurple3"))
+legend(1,200, c("PAM(5)", "PAM(6)", "PAM(7)", "PAM(13)", "PAM(17)", "PAM(1)", "PAM(10)"), c("red", "blue", "orange","darkolivegreen4", "magenta3", "mediumpurple3"))
 
