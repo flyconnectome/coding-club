@@ -1,0 +1,103 @@
+---
+title: "Nblast against FlyLight/GMR"
+output: html_notebook
+---
+
+```{r}
+# Download neurons
+
+# # Download dotprops of GMR neurons
+# gmrdps<-read.neuronlistfh("http://flybrain.mrc-lmb.cam.ac.uk/si/nblast/gmrdps/gmrdps.rds", localdir=getOption('flycircuit.datadir'), update=TRUE)
+
+# Reading in all neurons upstream of y5 DANs by annotation
+all_upstream = read.neurons.catmaid("annotation:AJES_all_y5PAMs_all_upstream", OmitFailures=T)
+# Use summary() to filter out neurons with less than 2000 nodes
+sum = summary(all_upstream)
+filtered_upstream = all_upstream[rownames(sum[sum$nodes>2000,])]
+# Use summary() to filter out two-soma neurons
+sum2 = summary(filtered_upstream)
+filtered_upstream2 = filtered_upstream[rownames(sum2[sum2$nsoma<2,])] # Fix two-soma neurons!
+# Transform neurons to FCWB reference brain for NBLASTing, and mirror in case of asymmetry in driver lines
+filtered_xformed = xform_brain(filtered_upstream2, sample=FAFB14, reference=FCWB)
+saveRDS(filtered_xformed, file="y5upstream_2000nodesplus.rds") # save skeletons for plotting later
+filtered_mirrored = mirror_brain(filtered_xformed, FCWB)
+saveRDS(filtered_mirrored, file="y5upstream_2000nodesplus_mirrored.rds")
+```
+
+```{r}
+# Dotprop-ify - no scaling required
+
+filtered_xformed.dots = dotprops(filtered_xformed, resample=1, k=5)
+saveRDS(filtered_xformed.dots, file="y5upstream_2000nodesplus_dots.rds")
+filtered_mirrored.dots = dotprops(filtered_mirrored, resample=1, k=5)
+saveRDS(filtered_mirrored.dots, file="y5upstream_2000nodesplus_mirrored_dots.rds")
+```
+
+
+```{r}
+# set up for parallel NBLAST across many cores
+doMC::registerDoMC(7)
+# get sys time before NBLAST to measure time to run
+start_time <- Sys.time()
+# Lots of NBLASTing - this was a bit experimental. Original and mirrored neurons against gmrdps in 3 different ways:
+# raw scores, normalised and normalised and using alpha - normalised is more useful than raw scores, with and without alpha
+# produces similar but not identical results (using alpha prioritises main tract over branching pattern)
+results = nblast(filtered_xformed.dots, gmrdps, version=2, .parallel=TRUE)
+results_mirrored = nblast(filtered_mirrored.dots, gmrdps, version=2, .parallel=TRUE)
+results_norm = nblast(filtered_xformed.dots, gmrdps, version=2, .parallel=TRUE, normalised = T)
+results_mirrored_norm = nblast(filtered_mirrored.dots, gmrdps, version=2, .parallel=TRUE, normalised = T)
+results_norm_alpha = nblast(filtered_xformed.dots, gmrdps, version=2, .parallel=TRUE, normalised = T, UseAlpha = T)
+results_mirrored_norm_alpha = nblast(filtered_mirrored.dots, gmrdps, version=2, .parallel=TRUE, normalised = T, UseAlpha = T)
+# get time at end and calculate run time
+end_time <- Sys.time()
+duration = end_time - start_time
+# save all NBLAST results so I don't have to do it again
+saveRDS(results, file="y5upstream_2000nodesplus_VS_GMR.rds")
+saveRDS(results_mirrored, file="y5upstream_2000nodesplus_mirrored_VS_GMR.rds")
+saveRDS(results_norm, file="y5upstream_2000nodesplus_VS_GMR_norm.rds")
+saveRDS(results_mirrored_norm, file="y5upstream_2000nodesplus_mirrored_VS_GMR_norm.rds")
+saveRDS(results_norm_alpha, file="y5upstream_2000nodesplus_VS_GMR_norm_alpha.rds")
+saveRDS(results_mirrored_norm_alpha, file="y5upstream_2000nodesplus_mirrored_VS_GMR_norm_alpha.rds")
+```
+
+```{r}
+# Load NBLAST results
+results = readRDS(file="y5upstream_2000nodesplus_VS_GMR.rds")
+results_mirrored = readRDS(file="y5upstream_2000nodesplus_mirrored_VS_GMR.rds")
+results_norm = readRDS(file="y5upstream_2000nodesplus_VS_GMR_norm.rds")
+results_mirrored_norm = readRDS(file="y5upstream_2000nodesplus_mirrored_VS_GMR_norm.rds")
+results_norm_alpha = readRDS(file="y5upstream_2000nodesplus_VS_GMR_norm_alpha.rds")
+results_mirrored_norm_alpha = readRDS(file="y5upstream_2000nodesplus_mirrored_VS_GMR_norm_alpha.rds")
+```
+
+```{r}
+# Ignore from here on down, this was just experimenting
+
+r = results_mirrored_norm
+top50coords <- t(apply(as.matrix(head(sort(r, decreasing=TRUE), 50)), 1, function(x) which(r==x,arr.ind=T)))[,c(2:1),drop = FALSE]
+top50matches = cbind(apply(as.matrix(top50coords[,1]), 1, function(x) colnames(r)[x]), apply(as.matrix(top50coords[,2]), 1, function(x) rownames(r)[x]))
+```
+
+```{r}
+# This is a bit dirty still, but works for now!
+plott <- function(x){
+  clear3d()
+  plot3d(FCWB, alpha=0.1)
+  nview3d("frontal")
+  plot3d(filtered_mirrored[[top50matches[x,1]]], col="black") # change based on whether mirroring or not!
+  plot3d(gmrdps[[top50matches[x,2]]], col="red")
+  input = readline("Return to continue, s to select: ")
+  if (input=='s'){
+    selection = rbind(selection, c(top50matches[x,1],top50matches[x,2])) # This isn't working as intended!
+  }
+}
+
+nopen3d()
+selection=matrix(nrow=0,ncol=2)
+apply(matrix(1:50), 1, function(x) plott(x))
+# 
+# 
+# # nlscan(top50matches[,1], db=filtered_xformed[unique(top50matches[,1])], col="black")
+# # nlscan(top50matches[,2], db=gmrdps[unique(top50matches[,2])], col="red")
+```
+
