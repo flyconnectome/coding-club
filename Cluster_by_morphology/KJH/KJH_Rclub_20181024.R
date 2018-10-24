@@ -16,10 +16,10 @@
 
 
 ### Second half - read in results from first half
-old_downstream = readRDS(file="~/Desktop/KJH20181024/Rclub20181024-old_downstream.rds")
-new_downstream = readRDS(file="~/Desktop/KJH20181024/Rclub20181024-new_downstream.rds")
+old_downstream = readRDS(file="~/Desktop/KJH_Rcub_20181024/Rclub20181024-old_downstream.rds")
+new_downstream = readRDS(file="~/Desktop/KJH_Rcub_20181024/Rclub20181024-new_downstream.rds")
 all_downstream = c(old_downstream, new_downstream)
-matrix = readRDS(file="~/Desktop/KJH20181024/Rclub20181024-matrix.rds")
+matrix = readRDS(file="~/Desktop/KJH_Rcub_20181024/Rclub20181024-matrix.rds")
 clustered = nhclust(scoremat=matrix)
 
 # Draw dendrogram of clustering and decide how many classes to split neurons into
