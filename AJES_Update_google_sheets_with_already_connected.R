@@ -23,3 +23,9 @@ final_skid[which(!nchar(unname(final_name))>14)] <- "" #remove the skids of thos
 ?gs_edit_cells  #anchor: single character string specifying the upper left cell of the cell range to edit; positioning notation can be either "A1" or "R1C1"
 #gs_edit_cells(ss= ss, ws = ws, anchor = "Kx", input = final_name)
 #gs_edit_cells(ss= ss, ws = ws, anchor = "Lx", input = final_skid)
+
+#Add "already connected" to notes
+all_con <- final_name
+all_con[which(nchar(final_name) > 0)] <- "Already Connected"
+all_con
+#use gs_edit_cells to input into Notes collumn of google sheet

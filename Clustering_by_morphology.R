@@ -9,7 +9,7 @@ DANs = c(y5, Bprime2a)
 
 # whole neuron clustering
 # DP conversion and calculations - /1e3 is crucial
-DANs.dots = dotprops(DANs)
+DANs.dots = dotprops(DANs/1e3)
 DANs.dots <- fetchdp_fafb(DANs.skids)
 
 DANs.matrix = nblast_allbyall(DANs.dots)
