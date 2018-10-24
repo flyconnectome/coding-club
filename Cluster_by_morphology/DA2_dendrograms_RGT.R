@@ -46,3 +46,4 @@ plot(set_leaf_colours(as.dendrogram(DA2_matrix_clustered), "red", col_to_set = c
 
 #Option 3: Colour leafs by whether they come from the initial or new samples (from Nik Drummond)
 
+[Sample_colours_ND] (https://github.com/flyconnectome/R-Club/blob/master/Cluster_by_morphology/Sample_Colours_ND)
