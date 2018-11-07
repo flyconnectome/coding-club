@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Colours in R</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Fiona" />
+    <link href="Colours_in_R_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="Colours_in_R_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+
+
+
+
+
+
+
+class: center, middle
+
+# Using colours in R
+### Useful functions and packages
+
+---
+
+# Why you should care
+
+--
+
+- Get your point across effectively
+
+--
+
+- Make a good impression
+
+--
+
+- Accessibility
+--
+
+  - Roughly 8% of men and 0.5% of women have some form of colourblindness
+
+--
+ 
+  - Consider how your figures will look when printed
+
+---
+
+#The basics
+### Types of colour palettes
+
+--
+
+- Sequential 
+
+  - for gradients or continuous values
+  - e.g. connection strength
+
+--
+
+- Diverging
+
+  - like sequential, but with two directions
+  - e.g. strength of excitation or inhibition
+
+--
+
+- Qualitative
+
+  - discrete values or objects to distinguish
+  - e.g. individual neurons
+
+---
+
+class: center, middle
+
+# Functions
+
+---
+
+# R
+
+--
+
+### `rainbow` (et. al.)
+
+--
+
+- Commonly used for default colour schemes; takes a number `n` and returns a rainbow of that many colours
+
+--
+
+- Not always easy to distinguish, especially around the greens
+
+--
+
+- Not colourblind friendly
+
+--
+
+- There are alternatives that work in more or less the same way
+  - Generally optimised for different purposes - e.g. `terrain.colors`, `topo.colors`
+
+---
+
+# R
+
+
+### `colorRampPalette`
+
+--
+
+- Very useful for generating continuous colour gradients
+
+--
+
+- Can be used with arbitrary colours, or discrete palettes included in a package
+
+--
+
+- Returns a *function*, not a value
+
+  - This function will behave like `rainbow`; i.e. you pass it a parameter `n` and it will give you a palette of that many colours from your gradient.
+  
+  - Some plotting functions (e.g. `heatmap.2`) will take this function as an argument
+
+---
+
+# R
+
+--
+
+### `colors`
+
+- Returns a list of all the named colours available in R
+
+--
+
+### `col2rgb` and `col2hex`
+
+- Convert a named colour to either a vector of RGB values or a hexadecimal string
+
+- Useful for compatibility between packages and with other software tools
+
+
+---
+
+class: center, middle
+
+# Packages
+
+---
+
+# RColorBrewer
+
+--
+
+- Based on the ColorBrewer palettes developed by Cynthia Brewer at Penn State
+
+--
+
+- Originally designed for geographic maps, but has a range of different palette types and is generally very useful
+
+--
+
+- Most palettes are colourblind-friendly 
+  - Several functions have the parameter `colorblindFriendly` to help you pick these out
+
+--
+
+- Includes integration with `ggplot2` for ease of plotting
+
+---
+
+# RColorBrewer
+
+
+
+```r
+display.brewer.all()
+```
+
+&lt;img src="figures/unnamed-chunk-4-1.png" width="768" style="display: block; margin: auto;" /&gt;
+
+---
+
+# RColorBrewer
+
+
+```r
+display.brewer.all(colorblindFriendly = TRUE)
+```
+
+&lt;img src="figures/unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" /&gt;
+
+---
+
+# RColorBrewer - Sequential
+
+
+
+```r
+plot_by_SO(AV4b1, col_fun = function(n){ brewer.pal(n, "YlOrRd") })
+```
+
+![ ](figures/plot_SO_RCB.png)
+
+
+---
+
+# RColorBrewer - Diverging
+
+
+```r
+corrplot(cor(state.x77), method = "color", 
+         col = colorRampPalette(brewer.pal(10, "RdYlBu"))(200))
+```
+
+&lt;img src="figures/unnamed-chunk-9-1.png" width="768" style="display: block; margin: auto;" /&gt;
+---
+
+# RColorBrewer - Qualitative
+
+
+```r
+ggplot(iris, aes(x=Petal.Length, y=Petal.Width, color=Species)) + 
+  geom_point() + scale_color_brewer(palette = "Dark2")
+```
+
+&lt;img src="figures/unnamed-chunk-10-1.png" width="768" style="display: block; margin: auto;" /&gt;
+
+---
+
+# viridis (and viridisLite)
+
+--
+
+- Five sequential gradients originally from the `matplotlib` python library
+
+--
+
+- Designed to be colourblind-friendly, perceptually uniform, and preserve information when printed in grayscale
+
+--
+
+- Also very pretty
+
+--
+
+- Good introduction to the theory behind these here -
+  https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
+
+---
+
+# viridis
+
+
+```r
+heatmap.2(volcano, col = viridis, ...)
+```
+&lt;img src="figures/unnamed-chunk-12-1.png" width="768" style="display: block; margin: auto;" /&gt;
+
+
+---
+
+# Polychrome
+
+--
+
+- Contains large qualitative palettes (22 to 36 values in each)
+
+--
+
+- Not easy to extend, but still very useful in cases where you need things to be distinguishable, but not necessarily unique (e.g. plotting lots of neurons)
+
+---
+
+#Polychrome
+
+
+
+
+```r
+plot3d(Cell07PNs, col=rep_len(glasbey.colors(32), length(Cell07PNs)))
+```
+
+![](figures/plot_Polychrome.png)
+
+---
+
+# qualpalr
+
+--
+
+- Dynamically generates qualitative palettes of up to 99 colours
+
+--
+
+- Not always especially pretty, but useful when you need unique colours
+
+--
+
+- By default, colours will vary in hue, saturation, and lightness, so most palettes are colourblind-friendly
+  - There are also specific parameters to optimise for different types of colourblindness
+
+--
+
+- NB: The main functions (`qualpal` and `autopal`) return a list with the generated palettes in different formats
+  - For most plotting purposes, you'll want the colours in hexadecimal format, so add `$hex` to the end of your call
+  
+---
+
+# qualpalr
+
+
+```r
+colours = qualpal(length(unique(state.df$div)))$hex
+ggplot(state.df, aes(...)) + geom_point() + ... + 
+  scale_color_manual(values = colours)
+```
+&lt;img src="figures/unnamed-chunk-18-1.png" width="768" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: center, middle
+
+# Fun
+
+---
+
+# colorr
+
+--
+
+- Sport team colour palettes
+  - Primarily US teams, but also has Premier League
+  
+--
+
+&lt;img src="figures/unnamed-chunk-19-1.png" width="768" style="display: block; margin: auto;" /&gt;
+
+---
+
+# palettetown
+
+- Qualitative colour palettes from Pokémon sprites
+
+--
+
+- Excellent syntax
+--
+
+  - `ichooseyou("charizard")`
+  
+--
+
+- Includes `ggplot2` integration and colourblind friendly options
+
+
+
+```r
+pokedex(cb = 1)
+```
+
+&lt;img src="figures/unnamed-chunk-20-1.png" width="768" style="display: block; margin: auto;" /&gt;
+
+---
+
+
+# others
+
+--
+
+### scales 
+
+- Amongst other things, this package bundles in a number of other colour palettes and functions
+
+- Includes the useful (although not colourblind-friendly) `hue_pal()` function, which whill mimic the default colours used by `ggplot`
+
+--
+
+### dichromat
+
+- Colour palettes optimised for people with red-green colourblindness
+
+- Includes a variety of palette types, including 'stepped-sequential'
+
+--
+
+#### ...and many more!
+
+---
+
+class: center, middle
+
+# More resources
+
+---
+
+# Blog posts and the like
+
+- https://blog.datawrapper.de/colors/ 
+  - A guide on how to choose colours to present different types of data.
+  
+- [Color Universal Design](http://jfly.iam.u-tokyo.ac.jp/color/)
+  - In-depth overview of how to make scientific figures accessible to colourblind people.
+  
+  - Includes a good qualitative palette to use.
+---
+
+# Websites
+
+- [Coblis](https://www.color-blindness.com/coblis-color-blindness-simulator/)
+  - Colourblindness simulator.  Good for checking plots/images.
+
+- [Coolors](https://coolors.co/app)
+  - Dynamically generates pretty colour palettes.  Has a built-in colourblindness simulator.
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "4:3"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

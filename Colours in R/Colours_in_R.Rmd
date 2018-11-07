@@ -1,0 +1,486 @@
+---
+title: "Colours in R"
+author: "Fiona"
+date: "23/10/2018"
+output:
+    xaringan::moon_reader:
+      seal: FALSE
+      nature:
+        ratio: '4:3'
+        
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.align = 'center')
+knitr::opts_chunk$set(fig.path = "figures/")
+```
+```{r}
+library(elmr)
+library(ggplot2)
+library(gridExtra)
+library(corrplot)
+library(gplots)
+library(reshape2)
+
+library(RColorBrewer)
+library(viridis)
+library(Polychrome)
+library(qualpalr)
+library(colorr)
+library(palettetown)
+```
+
+```{r results="hide"}
+#example data
+
+data(AV4b1)#from catmaid package
+AV4b1.SO = strahler_order(AV4b1)
+
+plot_by_SO <- function(n, col_fun, soma = TRUE){
+  n.so = strahler_order(n)
+  max = max(n.so$segments)
+  lapply(1:length(n$SegList), function(i){ lines3d(xyzmatrix(n$d[n$SegList[[i]],]), col = col_fun(max)[n.so$segments[i]]) })
+  if(soma){
+    spheres3d(xyzmatrix(n$d[n$d$PointNo == n$tags$soma,]), radius = n$d[n$d$PointNo == n$tags$soma, "W"]/2, col = col_fun(max)[max])
+  }
+}
+
+SO_v_len = do.call(rbind, nlapply(Cell07PNs, 
+                                  function(n){ 
+                                    data.frame(
+                                      strahler_order = strahler_order(n)$segments,
+                                      length = sapply(n$SegList, length),
+                                      neuron = rep(n$NeuronName, length(n$SegList))
+                                    )
+                                    
+                                  }))
+
+
+
+score = data.frame(quarter = c(1, 2, 3, 4), Eagles = c(9, 22, 29, 41), Patriots = c(3, 12, 26, 33))
+superbowl = melt(score, id.vars = "quarter", value.name = "score", variable.name = "team")
+
+
+state.df = data.frame(abb = state.abb, 
+                      area = state.area, 
+                      center = state.center, 
+                      div = state.division, 
+                      name = state.name, 
+                      region = state.region, 
+                      x77 = state.x77)
+
+
+```
+
+
+class: center, middle
+
+# Using colours in R
+### Useful functions and packages
+
+---
+
+# Why you should care
+
+--
+
+- Get your point across effectively
+
+--
+
+- Make a good impression
+
+--
+
+- Accessibility
+--
+
+  - Roughly 8% of men and 0.5% of women have some form of colourblindness
+
+--
+ 
+  - Consider how your figures will look when printed
+
+---
+
+#The basics
+### Types of colour palettes
+
+--
+
+- Sequential 
+
+  - for gradients or continuous values
+  - e.g. connection strength
+
+--
+
+- Diverging
+
+  - like sequential, but with two directions
+  - e.g. strength of excitation or inhibition
+
+--
+
+- Qualitative
+
+  - discrete values or objects to distinguish
+  - e.g. individual neurons
+
+---
+
+class: center, middle
+
+# Functions
+
+---
+
+# R
+
+--
+
+### `rainbow` (et. al.)
+
+--
+
+- Commonly used for default colour schemes; takes a number `n` and returns a rainbow of that many colours
+
+--
+
+- Not always easy to distinguish, especially around the greens
+
+--
+
+- Not colourblind friendly
+
+--
+
+- There are alternatives that work in more or less the same way
+  - Generally optimised for different purposes - e.g. `terrain.colors`, `topo.colors`
+
+---
+
+# R
+
+
+### `colorRampPalette`
+
+--
+
+- Very useful for generating continuous colour gradients
+
+--
+
+- Can be used with arbitrary colours, or discrete palettes included in a package
+
+--
+
+- Returns a *function*, not a value
+
+  - This function will behave like `rainbow`; i.e. you pass it a parameter `n` and it will give you a palette of that many colours from your gradient.
+  
+  - Some plotting functions (e.g. `heatmap.2`) will take this function as an argument
+
+---
+
+# R
+
+--
+
+### `colors`
+
+- Returns a list of all the named colours available in R
+
+--
+
+### `col2rgb` and `col2hex`
+
+- Convert a named colour to either a vector of RGB values or a hexadecimal string
+
+- Useful for compatibility between packages and with other software tools
+
+
+---
+
+class: center, middle
+
+# Packages
+
+---
+
+# RColorBrewer
+
+--
+
+- Based on the ColorBrewer palettes developed by Cynthia Brewer at Penn State
+
+--
+
+- Originally designed for geographic maps, but has a range of different palette types and is generally very useful
+
+--
+
+- Most palettes are colourblind-friendly 
+  - Several functions have the parameter `colorblindFriendly` to help you pick these out
+
+--
+
+- Includes integration with `ggplot2` for ease of plotting
+
+---
+
+# RColorBrewer
+```{r}
+par(cex.lab=0.5)
+```
+
+```{r fig.width=8, fig.height=5, echo = TRUE}
+display.brewer.all()
+```
+
+---
+
+# RColorBrewer
+
+```{r fig.width=8, fig.height=5, echo = TRUE}
+display.brewer.all(colorblindFriendly = TRUE)
+```
+
+---
+
+# RColorBrewer - Sequential
+
+```{r results="hide"}
+open3d()
+par3d(windowRect = c(0, 0, 800, 500))
+nview3d("frontal")
+```
+```{r echo=TRUE}
+plot_by_SO(AV4b1, col_fun = function(n){ brewer.pal(n, "YlOrRd") })
+```
+```{r echo=FALSE}
+snapshot3d("figures/plot_SO_RCB.png")
+rgl.close()
+```
+![ ](figures/plot_SO_RCB.png)
+
+
+---
+
+# RColorBrewer - Diverging
+
+```{r fig.width=8, fig.height=4, echo=TRUE}
+corrplot(cor(state.x77), method = "color", 
+         col = colorRampPalette(brewer.pal(10, "RdYlBu"))(200))
+```
+---
+
+# RColorBrewer - Qualitative
+
+```{r fig.width=8, fig.height=4, echo=TRUE}
+ggplot(iris, aes(x=Petal.Length, y=Petal.Width, color=Species)) + 
+  geom_point() + scale_color_brewer(palette = "Dark2")
+```
+
+---
+
+# viridis (and viridisLite)
+
+--
+
+- Five sequential gradients originally from the `matplotlib` python library
+
+--
+
+- Designed to be colourblind-friendly, perceptually uniform, and preserve information when printed in grayscale
+
+--
+
+- Also very pretty
+
+--
+
+- Good introduction to the theory behind these here -
+  https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html
+
+---
+
+# viridis
+
+```{r echo=TRUE, eval=FALSE}
+heatmap.2(volcano, col = viridis, ...)
+```
+```{r fig.width=8, fig.height=5}
+heatmap.2(volcano, col=viridis, Colv = F, Rowv = F, trace="none", dendrogram="none", key=F, lhei = c(0.1, 4.9), lwid = c(0.1, 7.9))
+```
+
+
+---
+
+# Polychrome
+
+--
+
+- Contains large qualitative palettes (22 to 36 values in each)
+
+--
+
+- Not easy to extend, but still very useful in cases where you need things to be distinguishable, but not necessarily unique (e.g. plotting lots of neurons)
+
+---
+
+#Polychrome
+
+```{r results="hide"}
+nopen3d()
+```
+```{r}
+nview3d("frontal")
+plot3d(IS2NP.surf, "LH_L", col = "gray", alpha = 0.1)
+par3d(windowRect = c(0, 0, 800, 450), zoom = 0.6, ignoreExtent = T)
+```
+```{r echo=TRUE}
+plot3d(Cell07PNs, col=rep_len(glasbey.colors(32), length(Cell07PNs)))
+```
+```{r echo=FALSE}
+snapshot3d("figures/plot_Polychrome.png")
+rgl.close()
+```
+![](figures/plot_Polychrome.png)
+
+---
+
+# qualpalr
+
+--
+
+- Dynamically generates qualitative palettes of up to 99 colours
+
+--
+
+- Not always especially pretty, but useful when you need unique colours
+
+--
+
+- By default, colours will vary in hue, saturation, and lightness, so most palettes are colourblind-friendly
+  - There are also specific parameters to optimise for different types of colourblindness
+
+--
+
+- NB: The main functions (`qualpal` and `autopal`) return a list with the generated palettes in different formats
+  - For most plotting purposes, you'll want the colours in hexadecimal format, so add `$hex` to the end of your call
+  
+---
+
+# qualpalr
+
+```{r eval=FALSE, echo=TRUE}
+colours = qualpal(length(unique(state.df$div)))$hex
+ggplot(state.df, aes(...)) + geom_point() + ... + 
+  scale_color_manual(values = colours)
+```
+```{r fig.width=8, fig.height=4}
+ggplot(state.df, aes(x=x77.Life.Exp, y=x77.Illiteracy, color=div)) + 
+  geom_point() + scale_color_manual(values = qualpal(length(unique(state.df$div)))$hex, name = "Region") +
+  labs(x = "Life Expectancy", y = "Illiteracy")
+```
+
+---
+
+class: center, middle
+
+# Fun
+
+---
+
+# colorr
+
+--
+
+- Sport team colour palettes
+  - Primarily US teams, but also has Premier League
+  
+--
+
+```{r fig.width=8, fig.height=4, echo = F}
+colours = c(nfl.colors("eagles")[1], "#002244")#bug in colorr - primary pats colour given as #02244
+names(colours) = NULL
+ggplot(superbowl, aes(x=quarter, y=score, fill=team)) + geom_bar(stat="identity", position="dodge") + 
+  scale_fill_manual(values=colours)
+```
+
+---
+
+# palettetown
+
+- Qualitative colour palettes from Pokémon sprites
+
+--
+
+- Excellent syntax
+--
+
+  - `ichooseyou("charizard")`
+  
+--
+
+- Includes `ggplot2` integration and colourblind friendly options
+
+
+```{r fig.width=8, fig.height=2, echo = T}
+pokedex(cb = 1)
+```
+
+---
+
+
+# others
+
+--
+
+### scales 
+
+- Amongst other things, this package bundles in a number of other colour palettes and functions
+
+- Includes the useful (although not colourblind-friendly) `hue_pal()` function, which whill mimic the default colours used by `ggplot`
+
+--
+
+### dichromat
+
+- Colour palettes optimised for people with red-green colourblindness
+
+- Includes a variety of palette types, including 'stepped-sequential'
+
+--
+
+#### ...and many more!
+
+---
+
+class: center, middle
+
+# More resources
+
+---
+
+# Blog posts and the like
+
+- https://blog.datawrapper.de/colors/ 
+  - A guide on how to choose colours to present different types of data.
+  
+- [Color Universal Design](http://jfly.iam.u-tokyo.ac.jp/color/)
+  - In-depth overview of how to make scientific figures accessible to colourblind people.
+  
+  - Includes a good qualitative palette to use.
+---
+
+# Websites
+
+- [Coblis](https://www.color-blindness.com/coblis-color-blindness-simulator/)
+  - Colourblindness simulator.  Good for checking plots/images.
+
+- [Coolors](https://coolors.co/app)
+  - Dynamically generates pretty colour palettes.  Has a built-in colourblindness simulator.
