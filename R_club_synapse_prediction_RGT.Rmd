@@ -1,0 +1,227 @@
+## synapse prediction ##
+
+Can we estimate connectivity between two neurons based on the spatial proximity of presynaptic connectors of a candidate and the skeleton of the target?
+
+
+Complete connectivity downstream of the DA2 PN (SKID 38885) is known.
+
+```{r}
+#complete downstream targets of DA2 PN (SKID 38885)
+catmaid_skids("FML - downstream of DA2") -> DA2ds_skids
+catmaid_get_connectors_between(38885, DA2ds_skids) -> DA2ds_skids_connectors
+DA2ds_skids_connectors$post_skid -> postids
+unique(postids) -> unique_postids   #248 unique skids
+
+counts = vector("list", length = 248)
+
+for(i in 1:length(unique_postids)) {
+  counts[i] = sum(postids == unique_postids[i])
+}
+counts = as.numeric(counts)
+
+data.frame(SKID = unique_postids, synapse_count = counts) -> DA2ds_connectivity
+DA2ds_connectivity[order(DA2ds_connectivity$synapse_count, decreasing = TRUE),] -> DA2ds_connectivity_ordered
+DA2ds_connectivity_ordered
+```
+
+
+Most stongly connected neuron - Joffrey - makes 54 synapses
+
+```{r}
+#most strongly connected target of DA2 PN (SKID 38885)
+catmaid_get_neuronnames(1376325)
+```
+
+
+Use point-to-point distances to predict connectivity between DA2 PN and Joffrey
+
+```{r}
+#READ NEURONS
+read.neuron.catmaid(38885) -> DA2_PN
+read.neuron.catmaid(1376325) -> Joffrey
+
+#DA2 PN PRESYNAPTIC CONNECTORS
+connectors(DA2_PN) -> DA2_connectors
+xyzmatrix(DA2_connectors) -> DA2_xyz   #DA2 connectors as xyz matrix - floating points in space
+
+#RESAMPLE JOFFREY
+resample(Joffrey, stepsize = 1000) -> Joffrey_1um   #Joffrey resampled to 1um
+xyzmatrix(Joffrey_1um) -> Joffrey_xyz
+
+#EVALUATE DISTANCES BETWEEN CONNECTORS AND RESAMPLED SKELETON
+rdist(DA2_xyz, Joffrey_xyz) -> distances                                                      #rdist returns a matrix of distances between all points of the two inputs
+as.data.frame(which(distances <= 740, arr.ind = TRUE)) -> synapses                            #synapses are considered to occur within a set threshold (s = 740 nm)
+synapses[match(unique(synapses$row), synapses$row),] -> Joffrey_predicted_synapses            #to reduce false positives, each presynaptic node is restricted to making one connection with the target skeleton
+length(Joffrey_predicted_synapses$row)
+```
+
+
+We can visualise where these potential synapses are made
+
+```{r}
+#VISUALISING POSITION OF POTENTIAL SYNAPSES
+as.numeric(Joffrey_predicted_synapses$row) -> connectors
+DA2_xyz[connectors,] -> connectors_xyz #get xyz for each connector that is predicted to make a synapse with Joffrey
+
+#set up 3d environment
+nopen3d()
+op <- structure(list(FOV = 30, userMatrix = structure(c(0.998838663101196,  #code Kimberly made to resize rgl window
+                                                        -0.00085014256183058, 0.0481719076633453, 0, 0.00598131213337183, 
+                                                        -0.989921271800995, -0.141492277383804, 0, 0.0478066727519035, 
+                                                        0.141615957021713, -0.988766610622406, 0, 0, 0, 0, 1),
+                                                      .Dim = c(4L, 4L)), scale = c(1, 1, 1), zoom = 0.545811593532562, 
+                     windowRect = c(4L,45L, 780L, 620L)),
+                .Names = c("FOV", "userMatrix", "scale", "zoom", "windowRect"))
+par3d(op)
+
+#reset environment
+clear3d()
+
+plot3d(FAFB14.surf, col = "white", alpha = 0.2)
+plot3d(DA2_PN, soma = TRUE, col = "blue")
+plot3d(Joffrey, soma = TRUE, col = "red")
+points3d(connectors_xyz)
+```
+
+
+138 synapses is obviously an overestimation, but it may be useful as a "score" if other DA2 PN downstream targets are overestimated by the same scale factor.
+
+We can test this using the top 10 DA2 PN targets
+
+```{r}
+catmaid_get_neuronnames(c(1376325, 2096700, 2026916, 1102557, 1101751, 1706774, 1102853, 1705052, 3469191, 2705119))
+```
+
+
+Predict number of synapses made between DA2 PN and each of the top 10 targets
+
+```{r}
+#READ NEURONS
+read.neuron.catmaid(2096700) -> Phil_Harris
+read.neuron.catmaid(2026916) -> Aspis
+read.neuron.catmaid(1102557) -> Albatross
+read.neuron.catmaid(1101751) -> Caligari
+read.neuron.catmaid(1706774) -> Cornet
+read.neuron.catmaid(1102853) -> Orb
+read.neuron.catmaid(1705052) -> neuron_1705052
+read.neuron.catmaid(3469191) -> neuron_3469191
+read.neuron.catmaid(2705119) -> neuron_2705119
+
+#RESAMPLE NEURONS
+resample(Phil_Harris, stepsize = 1000) -> Phil_Harris_1um
+resample(Aspis, stepsize = 1000) -> Aspis_1um
+resample(Albatross, stepsize = 1000) -> Albatross_1um
+resample(Caligari, stepsize = 1000) -> Caligari_1um
+resample(Cornet, stepsize = 1000) -> Cornet_1um
+resample(Orb, stepsize = 1000) -> Orb_1um
+resample(neuron_1705052, stepsize = 1000) -> neuron_1705052_1um
+resample(neuron_3469191, stepsize = 1000) -> neuron_3469191_1um
+resample(neuron_2705119, stepsize = 1000) -> neuron_2705119_1um
+
+#GET XYZ COORDINATES
+xyzmatrix(Phil_Harris_1um) -> Phil_Harris_xyz
+xyzmatrix(Aspis_1um) -> Aspis_xyz
+xyzmatrix(Albatross_1um) -> Albatross_xyz
+xyzmatrix(Caligari_1um) -> Caligari_xyz
+xyzmatrix(Cornet_1um) -> Cornet_xyz
+xyzmatrix(Orb_1um) -> Orb_xyz
+xyzmatrix(neuron_1705052_1um) -> neuron_1705052_xyz
+xyzmatrix(neuron_3469191_1um) -> neuron_3469191_xyz
+xyzmatrix(neuron_2705119_1um) -> neuron_2705119_xyz
+
+#CALCULATE DISTANCES
+rdist(DA2_xyz, Phil_Harris_xyz) -> distances
+as.data.frame(which(distances <= 740, arr.ind = TRUE)) -> synapses
+synapses[match(unique(synapses$row), synapses$row),] -> Phil_Harris_predicted_synapses
+
+rdist(DA2_xyz, Aspis_xyz) -> distances
+as.data.frame(which(distances <= 740, arr.ind = TRUE)) -> synapses
+synapses[match(unique(synapses$row), synapses$row),] -> Aspis_predicted_synapses
+
+rdist(DA2_xyz, Albatross_xyz) -> distances
+as.data.frame(which(distances <= 740, arr.ind = TRUE)) -> synapses
+synapses[match(unique(synapses$row), synapses$row),] -> Albatross_predicted_synapses
+
+rdist(DA2_xyz, Caligari_xyz) -> distances
+as.data.frame(which(distances <= 740, arr.ind = TRUE)) -> synapses
+synapses[match(unique(synapses$row), synapses$row),] -> Caligari_predicted_synapses
+
+rdist(DA2_xyz, Cornet_xyz) -> distances
+as.data.frame(which(distances <= 740, arr.ind = TRUE)) -> synapses
+synapses[match(unique(synapses$row), synapses$row),] -> Cornet_predicted_synapses
+
+rdist(DA2_xyz, Orb_xyz) -> distances
+as.data.frame(which(distances <= 740, arr.ind = TRUE)) -> synapses
+synapses[match(unique(synapses$row), synapses$row),] -> Orb_predicted_synapses
+
+rdist(DA2_xyz, neuron_1705052_xyz) -> distances
+as.data.frame(which(distances <= 740, arr.ind = TRUE)) -> synapses
+synapses[match(unique(synapses$row), synapses$row),] -> neuron_1705052_predicted_synapses
+
+rdist(DA2_xyz, neuron_3469191_xyz) -> distances
+as.data.frame(which(distances <= 740, arr.ind = TRUE)) -> synapses
+synapses[match(unique(synapses$row), synapses$row),] -> neuron_3469191_predicted_synapses
+
+rdist(DA2_xyz, neuron_2705119_xyz) -> distances
+as.data.frame(which(distances <= 740, arr.ind = TRUE)) -> synapses
+synapses[match(unique(synapses$row), synapses$row),] -> neuron_2705119_predicted_synapses
+
+#compare real vs. predicted connectivity
+top10_target_names = catmaid_get_neuronnames(c(1376325, 2096700, 2026916, 1102557, 1101751, 1706774, 1102853, 1705052, 3469191, 2705119))
+top10_target_real_synapse_count = DA2ds_connectivity_ordered[1:10,2]
+top10_target_predicted_synapse_count = c(length(Joffrey_predicted_synapses$row), length(Phil_Harris_predicted_synapses$row), length(Aspis_predicted_synapses$row), 
+                                         length(Albatross_predicted_synapses$row), length(Caligari_predicted_synapses$row), length(Cornet_predicted_synapses$row),
+                                         length(Orb_predicted_synapses$row), length(neuron_1705052_predicted_synapses$row), length(neuron_3469191_predicted_synapses$row),
+                                         length(neuron_2705119_predicted_synapses$row))
+data.frame(neuron_name = top10_target_names, real_synapse_count = top10_target_real_synapse_count, predicted_synapse_count = top10_target_predicted_synapse_count) -> real_vs_predicted_synapses
+real_vs_predicted_synapses
+
+plot(real_vs_predicted_synapses$predicted_synapse_count, real_vs_predicted_synapses$real_synapse_count, main = "Real vs. predicted connectivity downstream of DA2 PN (SKID 38885)", sub = "Resampled to 1um", xlab = "Predicted synapse count", ylab = "Real synapse count")
+```
+
+
+---------------//-----------------
+
+
+Now the original, extremely poor way of doing it
+
+```{r}
+#get xyz coordinates of connectors
+catmaid_get_connector_table(38885) -> connector_table
+connector_table[match(unique(connector_table$connector_id), connector_table$connector_id),] -> unique_connectors
+data.frame(connector_id = unique_connectors$connector_id, x = unique_connectors$x, y = unique_connectors$y, z = unique_connectors$z) -> connectors_xyz
+
+#Phil Harris
+read.neuron.catmaid(2096700) -> PH
+resample(PH, stepsize = 1000) -> PH_resampled
+data.frame(x = PH_resampled$d$X, y = PH_resampled$d$Y, z = PH_resampled$d$Z) -> PH_xyz
+
+distances = vector("list", length = 1535336) #PH_xyz*connectors_xyz
+counts = 0
+for (i in 1:length(connectors_xyz$connector_id)){
+  for (j in 1:length(PH_xyz$x)){
+    counts = counts + 1
+    distances[counts] = sqrt(((connectors_xyz$x[i] - PH_xyz$x[j])^2)+((connectors_xyz$y[i] - PH_xyz$y[j])^2)+((connectors_xyz$z[i] - PH_xyz$z[j])^2))
+  }
+}
+
+thresholds = c(500, 600, 700, 800, 900, 1000)
+counts = vector("list", length = 6)
+for (i in 1:length(thresholds)){
+  counts[i] = sum(distances <= thresholds[i])
+}
+data.frame(threshold_nm = as.numeric(thresholds), predicted_synapses = as.numeric(counts)) -> PH_predicted_synapses
+PH_predicted_synapses
+```
+
+
+Big question: how to apply this method to a neuron list
+
+Use nlapply() ???
+
+```{r}
+read.neurons.catmaid(DA2ds_connectivity_ordered$SKID[1:30]) -> top_30_neuronlist
+resample(top_30_neuronlist, stepsize = 1000) -> top_30_resampled
+nlapply(top_30_resampled, xyzmatrix) -> top_30_xyz
+nlapply(top_30_xyz, rdist, DA2_xyz) -> distances
+```
