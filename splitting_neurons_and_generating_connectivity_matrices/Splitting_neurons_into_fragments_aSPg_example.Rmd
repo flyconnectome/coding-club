@@ -1,0 +1,216 @@
+---
+title: "Splitting neurons into fragments for sampling, aSPg example"
+output: html_notebook
+---
+
+# 1. Load your neuron in CATMAID and check the root of the neuron is at the soma and you have tagged all the nodes you want to prune from.
+
+```{r}
+#Load all the necessary libraries
+library(catmaid)
+library(elmr)
+```
+
+```{r}
+skid <- 534333
+n <- read.neuron.catmaid(skid) #aSPg neuron
+```
+
+#Cut neuron at specified tagged nodes, in this case "AJES_cut_x"
+```{r}
+#Get the nodes for the tags with "AJES_cut" in them
+cut_nodes <- n$tags[grepl("AJES_cut", names(n$tags))]
+#Reorder to AJES_cut_1, AJES_cut_2, AJES_cut_3, AJES_cut_4
+cut_nodes <- cut_nodes[sort(names(cut_nodes))]
+#Get X,Y,Z coords of cut_nodes to plot in 3d
+n$d$X[n$d$PointNo %in% cut_nodes]
+n$d$Y[n$d$PointNo %in% cut_nodes]
+n$d$Z[n$d$PointNo %in% cut_nodes]
+```
+```{r}
+nview3d("frontal")
+plot3d(n, soma = T, col = "black", WithConnectors = T)
+col <- rainbow(length(cut_nodes))
+sapply(1:4, function(x) points3d(n$d$X[n$d$PointNo %in% cut_nodes[x]], 
+                                 n$d$Y[n$d$PointNo %in% cut_nodes[x]],
+                                 n$d$Z[n$d$PointNo %in% cut_nodes[x]],
+                                 size = 10,
+                                 col = col[x],
+                                 pch = 16)) #pch = 16 plots circles, use ?points to find other shapes plotted with the pch argument.
+legend3d("topright", legend = names(cut_nodes), fill = col)
+rglwidget()
+```
+
+
+```{r}
+#Lets start by cutting the neuron distal to AJES_cut_1.
+dist <- distal_to(n, node.pointno = cut_nodes[[1]]) #Return indices of points in a neuron distal to a given node
+#Subset our neuron by dist indices
+neuron.distal.points <- n$d[dist,]
+```
+#Plot points distal to cut point 1.
+```{r}
+clear3d()
+legend3d()
+nview3d("frontal")
+plot3d(n, col = "gray23", soma = T)
+points3d(neuron.distal.points[,c('X','Y','Z')], col = "deepskyblue")
+rglwidget()
+```
+
+```{r}
+#That's great, but we are only interested in the axons on the left hemisphere. Not the ones on the right too.
+#Lets remove everything distal to AJES_cut_2 from everything distal to AJES_cut1
+#Lets start by cutting the neuron distal to AJES_cut_1.
+dist1 <- distal_to(n, node.pointno = cut_nodes[[1]])
+dist2 <- distal_to(n, node.pointno = cut_nodes[[2]])
+
+#Subset our neuron by dist indices
+neuron.distal.points <- n$d[setdiff(dist1, dist2),]
+
+```
+
+```{r}
+clear3d()
+nview3d("frontal")
+plot3d(n, col = "gray23", soma = T)
+points3d(neuron.distal.points[,c('X','Y','Z')], col = "deepskyblue")
+rglwidget()
+
+```
+
+```{r}
+# Or there's the option of including points distal to two cuts...
+dist3 <- distal_to(n, node.pointno = cut_nodes[[3]])
+dist4 <- distal_to(n, node.pointno = cut_nodes[[4]])
+neuron.distal.points <- n$d[c(dist3, dist4),]
+```
+
+```{r}
+clear3d()
+nview3d("frontal")
+plot3d(n, col = "gray23", soma = T)
+points3d(neuron.distal.points[,c('X','Y','Z')], col = "deepskyblue")
+rglwidget()
+```
+
+#Connectivity matrix of split neuron
+```{r}
+#For our example lets just use the first cut point, and generate a connectivity matrix for the distal neuron
+neuron.distal.points <- n$d[dist,]
+#Generate connectivity matrix for neuron we are interested in
+con_mat <- catmaid_get_connectors_between(post_skids = skid)
+#subset connectivity matrix to only contain points in neuron.distal.points
+neuron.distal.points #neuron.distal.points contains the following:
+```
+```{r}
+con_mat #and the connectivity matrix is a dataframe containing this informtation
+```
+```{r}
+#depending on whether you specified pre or post_skids in the catmaid_get_connectors_between we can subset con_mat by post_node_id or pre_node_id. In this example we are using post_skids and post_node_id to look at inputs to our neuron.
+
+#subset con_mat by nodeid/PointNo from neuron.distal.points
+con_mat$post_node_id %in% neuron.distal.points$PointNo  #returns a logical matrix, TRUE values are connections in our distal branch.
+con_mat[con_mat$post_node_id %in% neuron.distal.points$PointNo,] #don't forget the "," as con_mat is a dataframe.
+dist_con_mat <- con_mat[con_mat$post_node_id %in% neuron.distal.points$PointNo,]
+```
+```{r}
+#We can even plot all of these connections to double check the connections are in the right place.
+clear3d()
+plot3d(n, soma = T, col = "grey")
+points3d(neuron.distal.points[,c('X','Y','Z')], col = "deepskyblue")
+points3d(dist_con_mat[,c("connector_x", "connector_y", "connector_z")], col = "green", size = 5)
+rglwidget()
+```
+
+#So you want to prune a neuron object instead?!
+```{r}
+#Great! There's a handy function subset() in the nat package.
+dist.n <- subset(n, dist)
+names(dist.n)
+names(n)
+#note how there is less information in the dist.n neuron object. It loosess connectivity information.
+```
+
+```{r}
+clear3d()
+plot3d(dist.n, WithNodes = F, col = "blue", soma = T)
+plot3d(n, col = "black", soma = T)
+rglwidget()
+```
+
+
+#Task/Challenge: Try generate a connectivity matrix for the other cut points
+#2. Use the following code to generate a sampling spreadsheet.
+
+```{r}
+#gives random ordering of pre-synaptic profiles
+node = 29496430
+skid = 6065216
+#function to return the incoming pre-synaptic nodes for the selected skid proximal of the provided cut point
+
+incoming_connections <- function(skid, node) {
+  neuron <- read.neuron.catmaid(skid)
+  dist <- distal_to(neuron, node.pointno = node)
+  neuron.distal.points <- neuron$d[-dist,]
+  
+  
+  
+  #debug- graph to check selected distal points are in correct region
+  nopen3d()
+  plot3d(neuron, col = "gray23")
+  points3d(neuron.distal.points[,c('X','Y','Z')], col = "deepskyblue")
+  
+  all_connectors <- catmaid_get_connectors_between(post_skids = skid)
+  connectors = all_connectors[all_connectors$post_node_id %in% neuron.distal.points$PointNo,]
+  #debug - graph to check all selected connectors in correct region
+  nopen3d()
+  plot3d(neuron, col = "black")
+  points3d(connectors[,c('connector_x','connector_y','connector_z')])
+  
+  return(connectors)
+}
+
+#get incoming synapses 
+n_incoming <- incoming_connections(skid = skid, node = node)
+#randomise outgoing connectors for tracing downstream partners
+perm = n_incoming[sample(nrow(n_incoming)),]
+#debug - 
+nopen3d()
+neuron <- read.neuron.catmaid(skid)
+plot3d(neuron)
+points3d(n_incoming[,c('post_node_x','post_node_y','post_node_z')], col='blue')
+points3d(perm[,c('post_node_x','post_node_y','post_node_z')], col = 'green', size = 8)
+#—URL generator—
+connector_URL <- function(dfrow){
+  base = "https://neuropil.janelia.org/tracing/fafb/v14/"
+  catmaid_url = paste0(base, "?pid=1")
+  catmaid_url = paste0(catmaid_url, "&zp=", dfrow[,"pre_node_z"])
+  catmaid_url = paste0(catmaid_url, "&yp=", dfrow[,"pre_node_y"])
+  catmaid_url = paste0(catmaid_url, "&xp=", dfrow[,"pre_node_x"])
+  catmaid_url = paste0(catmaid_url, "&tool=tracingtool")
+  catmaid_url = paste0(catmaid_url, "&active_skeleton_id=", dfrow[,'pre_skid'])
+  catmaid_url = paste0(catmaid_url, "&active_node_id=", dfrow[,"pre_node_id"])
+  catmaid_url = paste0(catmaid_url, "&sid0=5&s0=0")
+  
+  invisible(catmaid_url)
+}
+#———
+#generate URLs for each row
+perm$URL = character(nrow(perm))
+perm[,"URL"] = sapply(1:nrow(perm), function(x) perm[x, "URL"] = connector_URL(perm[x,]))
+#write out as CSV to save in Google docs
+write.csv(perm, file = 'test.csv')
+
+library(googlesheets)
+gs_ls()
+y5 <- gs_title("TITLE HERE") #Insert your title here
+gs_edit_cells(y5, ws = 1, input = perm$pre_skid, anchor = "A3", byrow = FALSE, col_names = FALSE)
+gs_edit_cells(y5, ws = 1, input = perm$post_skid, anchor = "B3", byrow = FALSE, col_names = FALSE)
+gs_edit_cells(y5, ws = 1, input = perm$connector_id, anchor = "C3", byrow = FALSE, col_names = FALSE)
+gs_edit_cells(y5, ws = 1, input = perm$post_node_id, anchor = "D3", byrow = FALSE, col_names = FALSE)
+gs_edit_cells(y5, ws = 1, input = perm$URL, anchor = "E3", byrow = FALSE, col_names = FALSE)
+
+```
+
+
