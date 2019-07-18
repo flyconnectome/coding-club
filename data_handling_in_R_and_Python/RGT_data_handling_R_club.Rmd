@@ -1,0 +1,112 @@
+---
+title: "data_handling_R_club"
+author: "Robert Turnbull"
+date: "17/07/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load packages
+```{r}
+library(catmaid)
+library(dplyr)
+library(tidyr)
+library(elmr)
+```
+
+dplyr is the main data-handling package in R. For installation see: https://www.r-project.org/nosvn/pandoc/dplyr.html
+
+The cheat sheet has some good information: https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf
+
+An example problem to demonstrate the uses of dplyr, focussing on generating an manipulating neuron data.
+
+
+1. Read skids and neurons (in this case a selection of 10 excitatory and inhibitory mPNs)
+```{r}
+excitatory.mPNs.sk = catmaid_skids("Rclub_1807_Ex")
+inhibitory.mPNs.sk = catmaid_skids("Rclub_1807_In")
+
+excitatory.mPNs = read.neurons.catmaid(excitatory.mPNs.sk)
+inhibitory.mPNs = read.neurons.catmaid(inhibitory.mPNs.sk)
+```
+
+2. Construct data frames with information about each neuron
+```{r}
+#excitatory
+excitatory.df = data.frame(skid = excitatory.mPNs.sk, 
+                           name = catmaid_get_neuronnames(excitatory.mPNs.sk), 
+                           row.names = NULL)
+
+#inhibitory
+inhibitory.df = data.frame(skid = inhibitory.mPNs.sk, 
+                           name = catmaid_get_neuronnames(inhibitory.mPNs.sk),
+                           row.names = NULL)
+```
+
+
+3. Add some addition information about tract and type
+```{r}
+#the pipe operator %>% takes the output of one function and uses it as the input for another
+
+excitatory.df %>% 
+  mutate(type = "excitatory") %>% 
+  mutate(tract = "mALT") -> excitatory.df
+
+inhibitory.df %>% 
+  mutate(type = "inhibitory") %>%
+  mutate(tract = "mlALT") -> inhibitory.df
+
+excitatory.df
+inhibitory.df
+```
+
+
+These functions can be used individually, but a data frame needs specifying e.g.
+
+mutate(df, type = "excitatory")
+
+is equivalent to
+
+df %>%
+  mutate(type = "excitatory")
+  
+The latter just allows you to pipe long chains of commands together without the need to make a load of intermediary variables.
+
+
+4. Merge data frames and filter by some variable
+```{r}
+bind_rows(excitatory.df, inhibitory.df) -> merge.df #bind_rows() joins by position
+
+#filter by type
+merge.df %>%
+  filter(type == "excitatory")
+
+#filter by tract
+merge.df %>%
+  filter(tract == "mlALT")
+
+#filter by names containing "VP1"
+merge.df %>%
+  filter(grepl("VP1", name))
+```
+
+
+5. We can do more complicated transformations with relative ease in dplyr.
+Here we would like to generate a connectivity matrix showing numbers of synapses between the 20 mPNs and all their downstream partners.
+```{r}
+connectors = catmaid_get_connector_table(skids = c(excitatory.mPNs.sk, inhibitory.mPNs.sk)) #a list of all connectors incoming and outgoing from the mPNs
+
+connectors %>%
+  filter(direction == "outgoing") %>%                #downstream targets only
+  na.omit() %>%                    #removes unconnected pre-synapses
+  group_by(skid) %>%                    #specify skid as a group that we want to perfrom some kind of summary on
+  count(partner_skid) %>%                     #counts partner_skid per group (skid)
+  spread(partner_skid, n, fill = NA) -> connectivity.matrix             #from the package "tidyr". Splits one column apart (partner_skid) and populates the new cells with new values (n)
+
+connectivity.matrix
+```
+At any stage we can pipe to the View() function which creates a temporary windown with the output. Very useful when working with a long chain of commands.
+
