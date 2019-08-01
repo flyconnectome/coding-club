@@ -1,1 +1,107 @@
+---
+title: "Coding_Club_290719"
+author: "S Bailey"
+date: "29/07/2019"
+output: html_document
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+##Load libraries
+library(devtools)
+library(dplyr)
+library(elmr)
+library(flycircuit)
+
+##No. 1
+ex_mpn<-read.neurons.catmaid("annotation:^Rclub_1807_Ex$")
+in_mpn<-read.neurons.catmaid("annotation:^Rclub_1807_In$")
+```
+```{r}
+##No.2
+nopen3d()
+plot3d(FAFB14, alpha = 0.1)
+plot3d(ex_mpn, soma=TRUE, col = "black")
+plot3d(in_mpn, soma=TRUE, col = "darkorchid")
+nview3d("frontal")
+```
+
+```{r}
+##No.3
+plot3d(FAFB14NP.surf, "LH_R", col = "orange", alpha=0.3)
+plot3d(FAFB14NP.surf, "AL_R", col = "magenta", alpha=0.3)
+```
+
+```{r}
+##No.4
+cc_neuron<-read.neuron.catmaid(1722886)
+clear3d()
+plot3d(cc_neuron, soma = T, col="black", lwd=2)
+points3d(cc_neuron$connectors[cc_neuron$connectors$prepost == 1,][,c('x','y','z')],
+         col = "turquoise3",
+         size = 3)
+points3d(cc_neuron$connectors[cc_neuron$connectors$prepost == 0,][,c('x','y','z')],
+         col = "firebrick2",
+         size = 3)
+nview3d("frontal")
+```
+
+```{r, echo=FALSE}
+##No.5
+library(catnat)
+##axon_tags<-catmaid_get_tag(cc_neuron, tag ="axon", url=FALSE)
+##dendrite_tags<-catmaid_get_tag(cc_neuron, tag ="dendrite", url=FALSE)
+howmanyaxon<-print(length(cc_neuron$tags$axon))
+howmanydend<-print(length(cc_neuron$tags$dendrite))
+
+## Check where axon and dendrite tags are
+clear3d()
+plot3d(cc_neuron, col="black", soma = TRUE, lwd=2)
+points3d(cc_neuron$d[cc_neuron$d$PointNo == cc_neuron$tags$axon,][,c('X', 'Y', 'Z')], col= "limegreen", size=8)
+points3d(cc_neuron$d[cc_neuron$d$PointNo == cc_neuron$tags$dendrite,][,c('X', 'Y', 'Z')], col= "yellow", size=8)
+
+##If it's all good the colour the axon and dendrite
+clear3d()
+cc_axon_split<-prune_by_tag(cc_neuron, tag = "axon", remove.upstream = TRUE)
+cc_dend_split<-prune_by_tag(cc_neuron, tag = "dendrite", remove.upstream = TRUE)
+plot3d(cc_axon_split, col = "limegreen")
+plot3d(cc_dend_split, col = "yellow")
+plot3d(cc_neuron, col="black", lwd=2, soma=TRUE)
+```
+
+```{r}
+##No.6 (pre) Looking at different palettes available in RColorBrewer
+library(RColorBrewer)
+mypalette<-brewer.pal(6,"Greens")
+image(1:7,1,as.matrix(1:6),col=mypalette,xlab="Greens (sequential)",
++       ylab="",xaxt="n",yaxt="n",bty="n")
+warmpalette<-brewer.pal(6,"YlOrRd")
+display.brewer.pal(6,"YlOrRd")
+allmycols<-factor(testing$`slide$points`, levels = c(1:6), labels = warmpalette)
+```
+
+```{r}
+## No.6
+#Find SO of each part of neuron
+slide<-strahler_order(cc_neuron) #gives you $points and $segments
+#Create df of SO, point number, and x,y,z coords
+testing<-cbind.data.frame(as.factor(slide$points), cc_neuron$d$PointNo, cc_neuron$d$X,cc_neuron$d$Y, cc_neuron$d$Z)
+#Change SO colname to groups
+colnames(testing)[colnames(testing)=="as.factor(slide$points)"] <- "groups"
+#Create a RColorBrewer palette with n levels
+jColours<-with(testing, data.frame(groups = levels(testing[,1]), color = I(brewer.pal(nlevels(testing[,1]), name = "YlOrRd"))))
+#Match the palette to the levels of each point in the df
+colouring<-data.frame(subset(testing, select = c(`cc_neuron$d$PointNo`,groups)), matchRetVal = match(testing$groups, jColours$groups))
+jDatColour<-merge(testing, jColours)
+#Plot the x,y,z points according to the colours 
+points3d(x=jDatColour$`cc_neuron$d$X`, y=jDatColour$`cc_neuron$d$Y`, z=jDatColour$`cc_neuron$d$Z`, col=jDatColour$color)
+````
