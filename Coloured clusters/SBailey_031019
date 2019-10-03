@@ -1,0 +1,81 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(devtools)
+library(dplyr)
+library(elmr)
+library(flycircuit)
+library(doMC)
+
+my.mal<-read.neuron.catmaid(8792484)
+mal.conn.us<-catmaid_get_connector_table(8792484, direction = "incoming", partner.skids = TRUE, get_partner_nodes = TRUE)
+mal.conn.us
+```
+
+
+```{r, echo=FALSE}
+mal.conn.us %>%
+  filter(partner_nodes>500)->f.mal.conn.us
+f.mal.conn.us
+```
+
+```{r, echo=FALSE}
+f.mal.us.skids<-unique(f.mal.conn.us$partner_skid)
+length(f.mal.us.skids)
+f.mal.us.skids
+````
+
+Clustering
+```{r, echo=FALSE}
+f.mal.us <- read.neurons.catmaid(f.mal.us.skids)
+
+# whole neuron clustering
+# DP conversion and calculations - /1e3 is crucial, but note! Only require one of these lines
+f.mal.us.dots = dotprops(f.mal.us/1e3)
+
+#Create a score matrix
+f.mal.us.matrix = nblast_allbyall(f.mal.us.dots)
+f.mal.us.clustered = nhclust(scoremat=f.mal.us.matrix)
+library(dendroextras)
+#Show classification of clusters by colour, determined by the height,h, and number of groups, k. Can also show the number of clusters.
+plot(colour_clusters(f.mal.us.clustered, h=0.7, col=rainbow, groupLabels = TRUE), main= 'mAL 8792484 Upstream partners')
+```
+```{r, echo=FALSE}
+#Alternative way to create dendrogram from scorematrix. This is better for editing your dendrogram with colours etc. 
+f.mal.us.dendro <- as.dendrogram(f.mal.us.clustered)
+# Draw dendrogram of clustering and give title
+plot(f.mal.us.dendro, main= 'mAL 8792484 Upstream partners')
+```
+```{r, echo=FALSE}
+# Plot neurons, coloured by cluster grouping based on k in dendrogram
+nopen3d()
+plot3d(FAFB14)
+plot3d(f.mal.us.clustered, db=f.mal.us, h=0.7, soma=T, lwd=2)
+nview3d("frontal")
+```
+
+```{r}
+library(RColorBrewer)
+accent<-display.brewer.pal(8,"Accent")
+```
+
+Look at each of the groups
+```{r, echo=FALSE}
+#To find out what neurons are in each group
+mal.us.groups<-as.matrix(cutree(f.mal.us.clustered, h=0.7))
+mal.us.groups<- as.data.frame(cbind(mal.us.groups, as.numeric(rownames(mal.us.groups))))
+names(mal.us.groups)<-c("Group", "Partner")
+mal.us.groups
+
+#To plot each group 1 by 1; this gives you time to take a screenshot of each group as you go
+for(i in 1:44){
+  clear3d()
+  plot3d(f.mal.us.clustered, k=44, db=f.mal.us, groups = i, lwd=2,soma=TRUE, col=accent)
+  #plot3d(f.mal.us.clustered, k=44, db=f.mal.us, groups = setdiff(1:44,i), col='grey')
+  print(i)
+  print(mal.us.groups$Partner[mal.us.groups$Group == i])
+  readline(prompt = 'Press Return to continue')
+}
+
+#Would like to now find out how many of these neurons are singletons, how many are LR duplicates etc!
+```
