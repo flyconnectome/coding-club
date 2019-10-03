@@ -1,0 +1,193 @@
+---
+title: "R Club3/10/2019"
+output: html_document
+---
+Task:
+
+1) Cluster the upstream partners of putative mAL (aDT-b) neuron R 8792485 KL IV by morphology. Set your threshold for partners by number of nodes, i.e. >500 nodes.
+2) Plot each neuron cluster in 3D sequentially in different colours, printing both cluster number and constituent skids.
+
+```{r}
+# Packages
+library(elmr)
+library(nat.nblast)
+library(dendextend)
+library(stringr)
+library(dendroextras)
+library(dplyr)
+library(catmaid)
+slice = dendroextras::slice
+
+#  ***loading all complete upstream neurons ***
+# loading putative mAL (aDT-b) neuron R 8792485 KL IV
+mAL = read.neuron.catmaid(8792484)
+
+# all upstream synapses
+mAL.conn = catmaid_get_connector_table(8792484, direction="incoming")
+# skids of upstream  neurons
+mAL_upstream_skids = unique(mAL.conn$partner_skid)
+# reading neurons
+mAL_USN = read.neurons.catmaid(mAL_upstream_skids)
+
+# vector of number of somas for upstream neurons
+mAL_upstream_somas = as.vector(nsoma(mAL_upstream_skids))
+# skids of neurons with soma
+mAL_upstream_skids = mAL_upstream_skids[which(mAL_upstream_somas == 1)]
+# reading complete upstream neurons
+mAL_USN = read.neurons.catmaid(mAL_upstream_skids)
+
+#check by plotting
+nopen3d()
+par3d(windowRect = c(0,   45, 1096,  843))
+rgl.viewpoint(  zoom = 0.6 )
+nview3d("frontal")
+plot3d(mAL_USN, soma=T, zoom = 0.8)
+plot3d(FAFB)
+rgl.bg(color="white") 
+```
+```{r}
+# OPTION 1 *** cluster by morphology normally **
+
+#into dotprops
+mAL_USN.dps=dotprops(mAL_USN/1e3, k=5, resample=1)
+
+#NBLAST with normalisation
+mAL_USN.aba=nblast_allbyall(mAL_USN.dps, normalisation = 'mean')
+
+#cluster using hclust (using average) 
+mAL_USN_hclust=nhclust(scoremat=mAL_USN.aba, method="average")
+
+#test plot
+plot(colour_clusters(mAL_USN_hclust, h=0.8, col= rainbow, groupLabels = T), main = "Upstream morphology clustering")
+abline(h=0.8, col='grey')
+# need to tidy up dendrogram
+
+```
+``` {r}
+# *** PLOTTING 3D ***
+
+# colour vector
+randombow <- function(n,s=1,v=1,start=0,end=max(1,n-1)/n,alpha=1){
+  return(sample(rainbow(n,s,v,start,end,alpha)))
+}
+# iterate number of clusters
+clusters = 28 
+colvec=randombow(clusters)
+
+# plotting clusters 3D
+nopen3d()
+plot3d(mAL_USN_hclust, k= clusters, db=mAL_USN, soma=T, col=colvec)
+nview3d("frontal")
+plot3d(FAFB14)
+```
+
+```{r}
+# OPTION 2 *** weighting primary neurite ***
+
+#tracts
+mAL_USN.simples1=nlapply(mAL_USN, simplify_neuron, n=1)
+
+#the rest
+mAL_USN.dendrites=nlapply(mAL_USN, simplify_neuron, n=1, invert=T)
+
+#plot to show primary neurite
+nopen3d()
+par3d(windowRect = c(0,   45, 1096,  843))
+rgl.viewpoint(  zoom = 0.9)
+nview3d("frontal")
+plot3d(mAL_USN.simples1[1], col = "green", lwd =3)
+plot3d(mAL_USN.dendrites[1], col = "red", lwd =3)
+plot3d(mAL_USN[1], col = "black", lwd = 1)
+plot3d(FAFB)
+
+```
+
+`
+
+`
+``` {r}
+#into dotprops
+mAL_USN.simples1.dps=dotprops(mAL_USN.simples1/1e3, k=5, resample=1)
+mAL_USN.dendrites.dps=dotprops(mAL_USN.dendrites/1e3, k=5, resample=1)
+
+#NBLAST with normalisation
+mAL_USN.simples1.aba=nblast_allbyall(mAL_USN.simples1.dps, normalisation = 'mean')
+mAL_USN.dendrites.aba=nblast_allbyall(mAL_USN.dendrites.dps, normalisation = 'mean')
+
+#getting element-wise mean
+
+mAL_USN_weighted_mean_aba=(0.8*(mAL_USN.simples1.aba)+0.2*(mAL_USN.dendrites.aba))
+
+
+#cluster using hclust (using average)
+
+mAL_USN_hclust_1=nhclust(scoremat=mAL_USN_weighted_mean_aba, method="average")
+plot(colour_clusters(mAL_USN_hclust_1, h = 0.8, col = rainbow, groupLabels = T), cex =0.6, main = "Upstream morphology clustering")
+
+# 3D plotting
+randombow <- function(n,s=1,v=1,start=0,end=max(1,n-1)/n,alpha=1){
+  return(sample(rainbow(n,s,v,start,end,alpha)))
+}
+
+clusters = 30
+colvec=randombow(clusters)
+
+nopen3d()
+plot3d(mAL_USN_hclust_1, k= 30, db=mAL_USN, soma=T, col=colvec)
+nview3d("frontal")
+plot3d(FAFB14)
+```
+``` {r}
+
+ # create a dataframe with neuron data used for the plot (skids and corresponding neuron names)
+df_mAL=data.frame(skid=labels(mAL_USN_hclust_1), cat_name=catmaid_get_neuronnames(labels(mAL_USN_hclust_1))) 
+
+#specifying cut height
+memb_mAL_mean <- as.data.frame(cutree(mAL_USN_hclust_1, h = 0.85, order_clusters_as_data = FALSE))
+memb_mAL_mean[,"skid"]=rownames(memb_mAL_mean)
+
+# specifying which skid belongs to which cluster number
+colnames(memb_mAL_mean)<-c("cluster","skid")
+
+# adding corresponding neuron name
+df_mAL <- left_join(df_mAL,memb_mAL_mean, by = "skid")
+#adding total number of neurons in cluster column
+df_mAL %>% add_count(cluster) -> df_mAL
+
+dput(colnames(df_mAL))
+colnames(df_mAL) <- c("skid", "cat_name", "cluster", "n_cluster")
+df_mAL %>%
+  group_by(cluster) %>%
+  mutate(plot_name=paste0(cluster,".", seq(from=1, to=max(n_cluster)))) -> df_mAL
+
+#assign data from df to dendrogram and plot
+mAL_USN_hclust.d=colour_clusters(mAL_USN_hclust_1, h=0.85,groupLabels = F)
+new_names=pull(df_mAL, plot_name)
+labels(mAL_USN_hclust.d)<-new_names
+par(cex=0.4)
+plot(mAL_USN_hclust.d)
+abline(h=0.85, col='grey')
+
+View(df_mAL)
+```
+
+```{r pressure, echo=FALSE}
+# OPTION 3 *** weighting soma tract ***
+#tracts
+mAL_USN.simples1=nlapply(mAL_USN, simplify_neuron, n=1)
+mAL_USN.primary = nlapply(mAL_USN.simples1, prune_strahler, orderstoprune=1)
+
+#the rest
+mAL_USN.dendrites=nlapply(mAL_USN, simplify_neuron, n=1, invert=T)
+
+#plot to show soma tract
+nopen3d()
+par3d(windowRect = c(0,   45, 1096,  843))
+rgl.viewpoint(  zoom = 0.9)
+nview3d("frontal")
+plot3d(mAL_USN.primary[1], col = "green", lwd =3)
+plot3d(mAL_USN.dendrites[1], col = "red", lwd =3)
+plot3d(mAL_USN[1], col = "black", lwd = 1, soma = T)
+plot3d(FAFB)
+```
+
