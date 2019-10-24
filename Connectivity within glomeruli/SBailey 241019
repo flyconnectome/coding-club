@@ -1,0 +1,52 @@
+#Coding Club 241019 - Plotting individual glomeruli meshes and finding the points/connectors within them. 
+
+# mPNs<-fetchn_fafb(c(7414898,7433204, 7423477, 7415649, 7414916, 4520615, 7430367, 7414912), mirror = FALSE, reference = "JFRC2")
+fafb_mpns<-read.neurons.catmaid(c(7414898,7433204, 7423477, 7415649, 7414916, 4520615, 7430367, 7414912))
+
+library(stringr)
+FAFB14NP.surf$RegionList #This shows the major surface volumes for FAFB
+vl=catmaid_get_volumelist() #More comprehensive
+glom<-vl$name[grepl("^v14.*_L$", vl$name)]
+glomnames<-glom[str_length(glom)<=10]
+tester_mesh<-lapply(glomnames, catmaid_get_volume) #class mesh3d, shape3d. Might need to change invertFaces into TRUE
+
+##Plots all the different glomeruli meshes
+clear3d()
+mapply(shade3d, tester_mesh, col=rainbow(length(tester_mesh)), alpha=0.2 ) # in colour
+par3d(windowRect = c(20, 30, 800, 800))
+rgl.viewpoint(  zoom = 0.75 )
+plot3d(fafb_mpns, soma = TRUE, col = "black", lwd=2)
+nview3d("frontal")
+plot3d(FAFB14) # Seems to be a little gap anterior to the glomeruli bundle and the AL.
+# plot3d(JFRC2)
+
+DA1glom.df <- data.frame(PI_logical = pointsinside(fafb_mpns[1], tester_mesh[[33]], rval = "logical"), 
+                        PI_distance = pointsinside(fafb_mpns[1], tester_mesh[[33]], rval = "distance"),
+                        row.names = NULL)
+
+#Find pointsinside a glomeruli; in tester_mesh 33=DA1
+DA1glom.df %>%
+  bind_cols(fafb_mpns[[1]][["d"]]) %>%
+  filter(PI_logical == 'TRUE') -> DA1points
+
+#Find connectors within that glomeruli
+as.data.frame(fafb_mpns[[1]][["connectors"]]) %>%
+  filter(!treenode_id %in% DA1points$PointNo) -> DA1conns2
+
+# Doesn't work. DA1connectors<-intersect(DA1points$PointNo, as.data.frame(fafb_mpns[[1]][["connectors"]]$treenode_id))
+
+##Plots glomerulus of interest
+clear3d()
+shade3d(tester_mesh[[33]], col="yellow", alpha=0.4)
+mapply(shade3d, tester_mesh, col="gray", alpha=0.2 ) # in colour
+lines3d(DA1points$X, DA1points$Y, DA1points$Z)
+points3d(DA1conns[DA1conns$prepost == 1,][,c('x','y','z')],
+         col = "turquoise3",
+         size = 5)
+points3d(DA1conns[DA1conns$prepost == 0,][,c('x','y','z')],
+         col = "firebrick2",
+         size = 5)
+plot3d(fafb_mpns[1], col = "black", WithConnectors=TRUE)
+nview3d("frontal")
+
+nopen3d()
