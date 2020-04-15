@@ -12,7 +12,7 @@ synapses_per_neuropil <- function(skids = NULL, neurons, toFCWB = FALSE){#TODO -
       neurons.fcwb = neurons
     }
     else{
-      neurons.fcwb = xform_brain(neurons, sample = FAFB13, reference = FCWB)
+      neurons.fcwb = xform_brain(neurons, sample = FAFB14, reference = FCWB)
     }
   }
   
