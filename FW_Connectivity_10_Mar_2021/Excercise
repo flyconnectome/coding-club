@@ -1,0 +1,8 @@
+Connecivity exercise with Flywire neurons:
+1. Find downstream partners of 720575940603560294 (LHa1 hemilineage)
+2. Get the neuron’s top five partners based on the number of synapses
+3. Plot the neuron and each partner (include the synapses in the plot) for all five neurons, and have the synapses colour coded by partner
+
+Advanced task
+1. Construct a neuroglancer scene with the neuron of interest and its top five partners (note: the top five partners should be the same color as it's relevant synapse colour assigned in point 3)
+2. NBLAST connectivity matrix of the LHa1 hemilineage [thresholds 1. include adequate/complete neurons 2. include connections with more than 5 synapses per neuron]
