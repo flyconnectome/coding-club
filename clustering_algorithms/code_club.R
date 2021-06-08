@@ -3,7 +3,7 @@ library(tidyverse)
 
 # 0) configure Neuprint connection
 neuprint_server <- "https://neuprint-test.janelia.org"
-neuprint_token <- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRra3J6ZW1AZ21haWwuY29tIiwibGV2ZWwiOiJyZWFkd3JpdGUiLCJpbWFnZS11cmwiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQVRYQUp6c1FyeXBiLXMxNXhsYXBQSEFUT1VWc3kwOGZTZFZMWWJIeUpIcj1zOTYtYz9zej01MD9zej01MCIsImV4cCI6MTgwMDM5NTQ5OH0.oECSjiB2OobdWR0q48KMP_xilTfOS9W7p-mbNL5lyrI"
+neuprint_token <- "xxxxxx"
 neuprint_ds <- "hemibrain:v1.0.1"
 conn = neuprint_login(server= neuprint_server,
                       token= neuprint_token,
