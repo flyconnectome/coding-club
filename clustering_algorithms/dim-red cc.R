@@ -1,8 +1,6 @@
-source("call_packages.R")
-call_packages()     #call packages
+library(neuprintr)
+library(tidyverse)#call packages
 library(Rtsne)
-library(tsne)
-library(remotes)
 library(umap)
 library(scatterplot3d)
 
