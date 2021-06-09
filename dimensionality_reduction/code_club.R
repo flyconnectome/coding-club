@@ -3,7 +3,7 @@ library(tidyverse)
 
 # 0) configure Neuprint connection
 neuprint_server <- "https://neuprint-test.janelia.org"
-neuprint_token <- "xxxxxx"
+neuprint_token <- "xxx" # your token here
 neuprint_ds <- "hemibrain:v1.0.1"
 conn = neuprint_login(server= neuprint_server,
                       token= neuprint_token,
