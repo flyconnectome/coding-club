@@ -1,0 +1,172 @@
+---
+title: "YY_neuropil_innervation_21072021"
+output: html_document
+---
+
+#### Task 1
+1: Read neurons of the hemilineage AOTUv4_ventral in the fafb_hemilineages_survey_right sheet.
+2: Remove duplicates and choose complete/adequate neurons for further analyses.
+3: Prune/simplify neurons as you see fit and divide into distinct morphological types.
+#### Task 2
+1: Find the downstream and upstream connections for each neuron.
+2: Write a function which returns the percentage of innervation of a given neuron in different neuropil (see nat::pointsinside()).
+#### Task 3
+1: Find which neuropil each neuron innervates. Obtain a dataframe with the percentage of innervation (percent connections in a given neuropil region) in each neuropil for each neuron.
+2: Plot and compare the percentage innervations in each neuropil for the different morphological types (brownie points if data is segregated by input & output synapses and/or axon & dendrites)
+#### Task 4
+1: Obtain a feature matrix where the rows are the neuron ids and columns are neuropil regions and each cell is the percentage of synapses of that neuron in that particular neuropil region.
+2: Apply TSNE/UMAP to reduce dimensions and see if morphological types cluster together according to their innervation patterns.
+
+
+```{r echo = FALSE}
+library(googlesheets4)
+library(glue)
+library(fafbseg)
+library(hemibrainr)
+library(dendextend)
+library(nat.nblast)
+library(plyr)
+library(elmr)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(Rtsne)
+library(tidyverse)
+library(randomcoloR)
+```
+
+```{r}
+lineage = 'AOTUv4_ventral'
+side = 'right'
+
+whole.lin.name <- glue('ItoLee_Hemilineage_{lineage}_{side}')
+sheet = read_sheet(ifelse(side == 'right', '1QyuHFdqz705OSxXNynD9moIsLvZGjjBjylx5sGZP2Yg', '1J3LxBlG42I2_xVHUERottgytdybBCyQjxDlIzFAjqgc'),
+                   sheet = whole.lin.name)
+sheet.lim <- sheet[sheet$status %in% c('adequate','complete','a','c'),]
+sheet.lim <- sheet.lim[!duplicated(sheet.lim$flywire.id),]
+sheet.lim$flywire.id <- flywire_latestid(sheet.lim$flywire.id)
+
+fw.neurons <- flywire_neurons(WithConnectors = T)
+neurons.indrive <- subset(fw.neurons, names(fw.neurons) %in% sheet.lim$flywire.id)
+length(neurons.indrive)
+```
+
+
+So no neurons in the drive. 
+```{r}
+neurons <- skeletor(sheet.lim$flywire.id)
+```
+
+```{r}
+ healed <- nlapply(neurons, stitch_neurons_mst)
+ # prune 
+ pruned <- nlapply(healed, prune_strahler) 
+ neurons.dps <- dotprops(pruned/1e3, k=5, resample = 1)
+ nbl <- nblast_allbyall(neurons.dps)
+ hc <- nhclust(scoremat = nbl) 
+ 
+ hc.dend <- as.dendrogram(hc)
+ plot(hc.dend)
+ heights_groups <- heights_per_k.dendrogram(hc.dend)
+ print(heights_groups)
+```
+
+```{r}
+group.num = as.numeric(readline('How many groups?'))
+grouped <- ddply(data.frame(gr = 1:group.num), .(gr), function(x) data.frame(ids = subset(hc, k = group.num, groups = x), gr = x))
+```
+#### Task 2 
+1: Find the downstream and upstream connections for each neuron.
+2: Write a function which returns the percentage of innervation of a given neuron in different neuropil (see nat::pointsinside()).
+```{r}
+# We should do this. However considering the time constraint, let's take 4 neurons from each group 
+all.partners <- flywire_partners(sheet.lim$flywire.id, partners = 'both', details = T, method = 'spine')
+# Alternatively, if you're short on time: 
+# ids <- unlist(tapply(grouped$ids, grouped$gr, function(x) head(x,4)))
+# all.partners <- flywire_partners(ids, partners = 'both', details = T, method = 'spine')
+
+head(all.partners)
+```
+
+```{r}
+all.partners$np <- NA
+for (np in FAFBNP.surf$RegionList){
+        meshnp = as.mesh3d(FAFBNP.surf, np)
+        all.partners$np <- ifelse(select(all.partners, pre_x:pre_z) %>% pointsinside(surf = meshnp), 
+                                  yes = np, no = all.partners$np)
+}
+# Add total synapse number for each neuron 
+syn.num <- aggregate(all.partners$pre_svid, list(all.partners$query), length)
+names(syn.num) <- c('query','synapse.num')
+all.partners <- merge(all.partners, syn.num, by = 'query')
+# Add total synapse number for each neuron for each neuropil? 
+
+head(all.partners)
+```
+
+```{r}
+# The function that tells you the % innervation of a given neuron 
+perc_innerv <- function(ids, prepost = c(1, 0), partner_dataframe){
+        selected <- partner_dataframe[partner_dataframe$query %in% ids & 
+                                              partner_dataframe$prepost %in% prepost,]
+        return(round(sweep(as.matrix(with(selected, table(query, np))), 
+                    1, 
+                    with(selected, table(query)), 
+                    '/'), 2))
+}
+```
+
+```{r}
+perc_innerv('720575940630113164',1, all.partners)
+```
+
+#### Task 3
+1: Find which neuropil each neuron innervates. Obtain a dataframe with the percentage of innervation (percent connections in a given neuropil region) in each neuropil for each neuron.
+2: Plot and compare the percentage innervations in each neuropil for the different morphological types (brownie points if data is segregated by input & output synapses and/or axon & dendrites)
+
+
+```{r}
+pre <- cbind(as.data.frame(perc_innerv(unique(all.partners$query), 1, all.partners)), 
+             'prepost' = 'pre')
+post <- cbind(as.data.frame(perc_innerv(unique(all.partners$query), 0, all.partners)), 
+             'prepost' = 'post')
+neuron.np <- rbind(pre, post)
+
+# Plotting 
+all.partners <- merge(all.partners, grouped, by.x = 'query', by.y = 'ids')
+# Since plotting by morphology groups, need to get the data frame again 
+group.pre <- cbind(as.data.frame(round(sweep(as.matrix(with(all.partners[all.partners$prepost == 1,], table(gr, np))), 
+                    1, 
+                    with(all.partners, table(gr)), 
+                    '/'), 2)), 
+                   'prepost' = 'pre')
+group.post <- cbind(as.data.frame(round(sweep(as.matrix(with(all.partners[all.partners$prepost == 0,], table(gr, np))), 1, 
+                    with(all.partners, table(gr)), 
+                    '/'), 2)), 
+                   'prepost' = 'post')
+group.np <- rbind(group.pre, group.post)
+
+ggplot(group.np, aes(x = np, y = Freq, fill = gr)) + 
+        geom_bar(stat = 'identity', position = 'dodge') + 
+        facet_wrap(~prepost, ncol = 1)
+```
+
+#### Task 4
+1: Obtain a feature matrix where the rows are the neuron ids and columns are neuropil regions and each cell is the percentage of synapses of that neuron in that particular neuropil region.
+2: Apply TSNE/UMAP to reduce dimensions and see if morphological types cluster together according to their innervation patterns.
+```{r}
+neuron.np.both <- as.data.frame(perc_innerv(unique(all.partners$query), c(1,0), all.partners))
+fea.mat <- pivot_wider(neuron.np.both, names_from = np, values_from = Freq)
+fea.mat %>% remove_rownames %>% column_to_rownames(var = 'query') -> fea.mat
+
+tsne <- Rtsne(fea.mat, perplexity = 6)
+# plot t-SNE 
+cols <- distinctColorPalette(length(unique(grouped$gr)))
+plot(tsne$Y, col = cols[as.factor(grouped$gr[match(rownames(fea.mat), grouped$ids)])])
+legend('bottomright', legend = unique(grouped$gr), text.col = cols[as.factor(unique(grouped$gr))])
+```
+
+
+
+
+
