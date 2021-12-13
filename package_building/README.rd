@@ -1,5 +1,6 @@
 # Package building tutorial
 
+https://github.com/flyconnectome/pRecomputed
 
 ## Reading
 
