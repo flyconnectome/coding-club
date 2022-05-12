@@ -1,0 +1,120 @@
+---
+title: "YY_120522"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(nat)
+library(nat.nblast)
+library(dendextend)
+library(plyr)
+library(randomcoloR)
+library(nat.jrcbrains)
+library(clipr)
+library(fafbseg)
+library(dplyr)
+```
+
+```{r}
+ids = c('720575940610268258','720575940631246161')
+```
+
+```{r}
+ids_ds = flywire_partner_summary(ids, partners = 'outputs', cleft.threshold = 30)
+head(ids_ds)
+```
+
+```{r}
+info = flytable_list_rows('info')
+# first clean up info 
+info = info %>% 
+  filter(!status %in% c('duplicate', 'bad_nucleus')) %>%
+  filter(root_duplicated != T) %>% 
+  filter(side %in% c('left','right'))
+ids_ds.fil = ids_ds[ids_ds$post_id %in% info$root_id[info$proofread] & 
+                      ids_ds$weight>3,]
+nrow(ids_ds.fil)
+```
+
+```{r}
+write_clip(ids_ds.fil$post_id)
+```
+
+```{r}
+# add meta info 
+ids_ds.fil = left_join(ids_ds.fil, info, by = c('post_id' = 'root_id'))
+head(ids_ds.fil)
+```
+
+```{r}
+with(ids_ds.fil[!duplicated(ids_ds.fil$post_id),], table(side, useNA = 'i'))
+```
+
+## NBLAST 
+```{r}
+neurons = read.neurons('/Users/yijieyin/Downloads/coding_club')
+```
+
+```{r}
+# mirroring left to right 
+neurons <- c(neurons[!names(neurons) %in% ids_ds.fil$post_id[ids_ds.fil$side == 'left']],
+             mirror_fafb(neurons[names(neurons) %in% ids_ds.fil$post_id[ids_ds.fil$side == 'left']]))
+```
+
+
+```{r}
+healed <- nlapply(neurons, stitch_neurons_mst)
+neurons.dps <- dotprops(healed/1e3, k=5, resample = 1)
+nbl <- nblast_allbyall(neurons.dps)
+hc <- nhclust(scoremat = nbl) 
+plot(hc)
+```
+
+```{r}
+dend = as.dendrogram(hc)
+labels_colors(dend) <- as.numeric(as.factor(
+  ids_ds.fil$side[match(labels(dend),ids_ds.fil$post_id)]))
+plot(dend)
+```
+
+```{r}
+write_clip(labels(dend)[58:62])
+```
+Links containing matches: 
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/4649636925014016
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/5811140567236608
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/5288110120239104
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/6573820257239040
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/6602514866634752
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/5723373380304896
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/6028425043116032
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/5089254812155904
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/4966715637104640
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/5669488066297856
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/6546573269925888
+https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/5990181379244032
+
+## compare synapse number for matched 
+### get matched ids 
+```{r}
+# get ids from links
+links = read_clip()
+ids.list = lapply(links, ngl_segments)
+left_ids = sapply(ids.list, function(x) ifelse(x[1] %in% ids_ds.fil$post_id[ids_ds.fil$side == 'left'], x[1], x[2]))
+matched = data.frame(left = left_ids, 
+                right = sapply(ids.list, function(x) ifelse(x[1] %in% left_ids, x[2], x[1])))
+a_ds = ids_ds.fil[ids_ds.fil$query == ids[1],]
+b_ds = ids_ds.fil[ids_ds.fil$query == ids[2],]
+matched$a_left = ids_ds.fil$weight[match(matched$left, a_ds$post_id)]
+matched$b_left = ids_ds.fil$weight[match(matched$left, b_ds$post_id)]
+matched$a_right = ids_ds.fil$weight[match(matched$right, a_ds$post_id)]
+matched$b_right = ids_ds.fil$weight[match(matched$right, b_ds$post_id)]
+matched[is.na(matched)] <- 0
+matched
+```
+
+
+
+
+
