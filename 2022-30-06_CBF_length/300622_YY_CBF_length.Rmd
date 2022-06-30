@@ -1,0 +1,124 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup}
+library(fafbseg)
+library(dplyr)
+library(clipr)
+library(nat)
+library(nat.nblast)
+library(dendextend)
+library(plyr)
+library(randomcoloR)
+library(nat.jrcbrains)
+library(ggplot2)
+```
+
+```{r}
+info = flytable_list_rows('info')
+with(info, table(cell_class))
+```
+
+```{r}
+rings = info %>% filter(cell_class %in% 'ring neuron')
+with(rings, table(ito_lee_hemilineage, side))
+```
+
+```{r}
+with(rings, table(cell_type))
+```
+
+```{r}
+write_clip(rings$root_id)
+```
+
+NBLAST
+```{r}
+## nblast python skeletons ---- 
+neurons = read.neurons('/Users/yijieyin/Downloads/rings')
+
+hist(sapply(neurons, function(x) x$NumSegs))
+```
+
+```{r}
+# mirror some ids if needed 
+neurons <- c(neurons[!names(neurons) %in% rings$root_id[rings$side == 'right']],
+             mirror_fafb(neurons[names(neurons) %in% rings$root_id[rings$side == 'right']]))
+
+healed <- nlapply(neurons, stitch_neurons_mst)
+neurons.dps <- dotprops(healed/1e3, k=5, resample = 1)
+nbl <- nblast_allbyall(neurons.dps, .progress = 'natprogress')
+hc <- nhclust(scoremat = nbl) 
+plot(hc, labels = F)
+```
+
+```{r}
+hc.dend <- as.dendrogram(hc)
+heights_groups <- heights_per_k.dendrogram(hc.dend)
+print(heights_groups[1:50])
+```
+
+```{r}
+labels_colors(hc.dend) <- as.numeric(labels(hc.dend) %in% rings$root_id[rings$side == 'right']) +1
+plot(hc.dend)
+```
+
+
+```{r}
+grouped = cutree(hc, k = 6)[labels(hc)]
+write_clip(names(grouped)[grouped == 1])
+```
+
+Have a look at the neurons 
+```{r}
+nclear3d()
+plot3d(neurons, soma = T, col= 'grey')
+plot3d(as.mesh3d(elmr::FAFBNP.surf, 'LAL_L'), add = T, alpha = 0.2)
+```
+
+```{r}
+ringnolal = nlapply(neurons, function(x) subset(x, pointsinside(xyzmatrix(x), surf = as.mesh3d(elmr::FAFBNP.surf, 'LAL_L')), invert = T))
+nclear3d()
+plot3d(ringnolal)
+```
+
+```{r}
+ringspi = nlapply(ringnolal, spine, UseStartPoint = T)
+clear3d()
+plot3d(ringspi)
+```
+
+```{r}
+sel = select3d()
+```
+
+```{r}
+ringsub = nlapply(ringspi, function(x) subset(x, sel), OmitFailures = T)
+nclear3d()
+plot3d(ringsub)
+```
+
+```{r}
+cablen = summary(ringsub) %>% 
+  tibble::rownames_to_column('root_id') %>% 
+  mutate(morphgroup = grouped[match(root_id, names(grouped))]) %>% 
+  left_join(rings %>% select(root_id, side, cell_type), by = 'root_id')
+with(cablen, table(morphgroup, cell_type))
+```
+
+```{r}
+cablen %>% 
+  ggplot(aes(x = morphgroup, y = cable.length)) + 
+  geom_point(alpha = 0.3)
+```
+
+```{r}
+cablen %>% 
+  ggplot(aes(x = cell_type, y = cable.length)) + 
+  geom_point(alpha = 0.3)
+```
+
+
+
