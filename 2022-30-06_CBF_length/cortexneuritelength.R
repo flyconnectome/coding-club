@@ -1,5 +1,11 @@
-source("call_packages.R")
-call_packages() 
+library(natverse)
+library(fafbseg)
+library(tidyverse)
+library(reticulate)
+library(hemibrainr)
+library(ggplot2)
+library(dendextend)
+library(clipr)
 library(randomcoloR)
 
 flytable_login(
