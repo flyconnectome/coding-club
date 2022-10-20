@@ -1,0 +1,169 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+Writing `r setup` automatically runs this cell when you just started R, and run one of the following cells 
+```{r setup}
+library(fafbseg)
+library(natverse)
+library(rgl)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+info = flytable_query('select * from info') %>% 
+  filter(!status %in% c('bad_nucleus', 'tiny', 'duplicate'))
+```
+
+```{r}
+# get a DA2PN randomly 
+alpns = info %>% filter(cell_class %in% 'ALPN')
+n = sample(alpns$root_id[grepl('DA2',alpns$cell_type)], 1)
+n.ds = flywire_partners(n, partners = 'outputs', details = T)
+n.ds = n.ds %>% filter(cleft_scores >= 50)
+```
+
+```{r}
+n.mesh = read_cloudvolume_meshes(n)
+```
+
+
+```{r}
+nclear3d()
+plot3d(FAFB.surf, col = 'gray', alpha = 0.2)
+plot3d(n.mesh, col = 'yellow')
+points3d(n.ds %>% select(pre_x, pre_y, pre_z))
+```
+
+```{r}
+# synapses that are not in the AL 
+nds.fil <- n.ds[(!pointsinside(n.ds[c('pre_x','pre_y','pre_z')], surf = as.mesh3d(elmr::FAFBNP.surf, 'AL_L')) & 
+  !pointsinside(n.ds[c('pre_x','pre_y','pre_z')], surf = as.mesh3d(elmr::FAFBNP.surf, 'AL_R'))),]
+nds.fil
+```
+
+# getting clusters 
+```{r}
+coords = nds.fil %>% select(pre_x, pre_y, pre_z)
+
+hc = hclust(dist(coords))
+plot(hc, labels = F)
+```
+
+```{r}
+groups = cutree(hc, h = 5000)
+cols = grDevices::rainbow(n = max(groups))
+```
+
+
+```{r}
+nclear3d()
+plot3d(FAFB.surf, col = 'gray', alpha = 0.2)
+plot3d(n.mesh, col = 'yellow')
+points3d(coords, col =  cols[groups])
+```
+
+```{r}
+table(groups)
+```
+
+```{r}
+nds.grouped = cbind(
+  nds.fil, 
+  data.frame(gr = groups)
+) %>% 
+  # only keep the proofread downstream neurons 
+  mutate(post_id = as.character(post_id)) %>% 
+  filter(post_id %in% info$root_id[info$proofread])
+```
+
+# getting centres 
+```{r}
+centres = nds.grouped %>% 
+  group_by(gr) %>% 
+  mutate(x = mean(pre_x), 
+         y = mean(pre_y), 
+         z = mean(pre_z)) %>% 
+  distinct(gr, x, y, z)
+centres
+```
+
+```{r}
+# a function that gives you uniformly sampled coordinates in a sphere 
+unisample_sphere <- function(centre, radius, step_size){
+  coords = expand.grid(
+    x = seq(centre[1] - radius, centre[1] + radius, step_size), 
+    y = seq(centre[2] - radius, centre[2] + radius, step_size), 
+    z = seq(centre[3] - radius, centre[3] + radius, step_size)
+  )
+  
+  dist_sq = apply(coords, 1, function(x) sum((x-centre)^2))
+  return(coords %>% filter(dist_sq <= radius^2))
+}
+```
+
+```{r}
+idsynabcount = data.frame(
+  id = character(), 
+  syn = double, 
+  abundance = double(),
+  group = double()
+)
+```
+
+```{r}
+radius = 1293 * 4
+step_size = 250
+for (i in centres$gr[1:5]){
+  cood = as.numeric(centres[i, 2:4])
+  pts = unisample_sphere(cood, radius, step_size)
+  
+  # count 'branch abundance' 
+  pts.ids = cbind(pts, 
+                  data.frame(ids = flywire_xyz2id(pts))) %>% 
+    filter(ids %in% info$root_id[info$proofread])
+  idtimes = as.data.frame(table(pts.ids$ids)) %>% 
+    rename(id = Var1)
+  
+  # synapse within range 
+  syn_dists = apply(nds.grouped %>% select(pre_x, pre_y, pre_z), 1, 
+                    function(x) sum((x - cood)^2))
+  syn_inrange = nds.grouped %>% filter(syn_dists <= radius^2)
+  
+  # count synapse abundance
+  syntimes = as.data.frame(table(syn_inrange$post_id)) %>% 
+    rename(id = Var1, 
+           syn = Freq)
+  
+  out = idtimes %>% 
+    full_join(syntimes, by = 'id') %>% 
+    tidyr::replace_na(list(Freq = 0, 
+                           syn = 0)) %>% 
+    mutate(group = i)
+  
+  idsynabcount = rbind(idsynabcount, out)
+}
+```
+
+```{r}
+idsynabcount %>% 
+  ggplot(aes(x = syn, y = Freq)) + 
+  geom_point() + 
+  labs(x = 'Synapse number', 
+       y = '"Branch number"')
+```
+
+```{r}
+idsynabcount %>% 
+  arrange(desc(syn))
+```
+
+```{r}
+idsynabcount %>% 
+  arrange(desc(Freq))
+```
+
+
+
+
