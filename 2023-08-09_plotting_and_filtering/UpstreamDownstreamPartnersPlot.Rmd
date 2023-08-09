@@ -1,0 +1,177 @@
+
+```{r setup, include=FALSE}
+library(fafbseg)
+library(natverse)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+#Choose a neuron, whatever you like as long as it has upstream and downstream partners
+id = "720575940622810879"
+
+#Get its top 3 downstream partners and upstream partners (via fafbseg or natverse)
+#downstream partners
+flywire_partners(id, partners = "both", details = T) -> partners #add details = T to get the synapse location data
+```
+
+
+```{r}
+partners %>% 
+  filter(pre_id != post_id) %>% #remove autapses
+  filter(cleft_scores > 50) %>% #want cleft theshold > 50, is conventional cut off point to remove fake synapses
+  filter(prepost==0) -> ds
+```
+
+
+```{r}
+partners %>% 
+  filter(pre_id != post_id) %>% #remove autapses
+  filter(cleft_scores > 50) %>% #want cleft theshold > 50, is conventional cut off point to remove fake synapses
+  filter(prepost!=0) -> us
+```
+
+
+```{r}
+#get top three downstream partners
+ds %>% 
+  group_by(pre_id, post_id) %>% #want to count the number of times ids are repeated in the pre_id and post_id columns 
+  summarise(connections = n()) %>% #and count these as number of connections in a new column called connections
+  ungroup() %>% 
+  arrange(desc(connections)) %>% #want to arrange in descending order
+  mutate(pre_id = as.character(pre_id), #change the ids from integer64 to characters
+         post_id = as.character(post_id)) -> dsf
+
+unique(dsf$post_id[1:3]) -> dsf3
+dsf3
+```
+
+```{r}
+#get top three upstream partners
+us %>% 
+  group_by(pre_id, post_id) %>% #want to count the number of times ids are repeated in the pre_id and post_id columns 
+  summarise(connections = n()) %>% #and count these as number of connections in a new column called connections
+  ungroup() %>% 
+  arrange(desc(connections)) %>% #want to arrange in descending order
+  mutate(pre_id = as.character(pre_id), #change the ids from integer64 to characters
+         post_id = as.character(post_id)) -> usf
+
+unique(usf$pre_id[1:3]) -> usf3
+usf3
+```
+
+
+```{r}
+#Using natverse/Navis, plot all 7 neurons in either 2D or 3D:
+#main one in red
+#upstream 3 in blue
+#downstream 3 in yellow
+#also plot all of the synapse locations between the main neuron and the other 6 as white dots
+
+#get synapse data first
+ds %>% 
+  mutate(post_id = as.character(post_id)) %>% 
+  filter(post_id %in% dsf3) %>% 
+  select(pre_x, pre_y, pre_z) -> dssyn
+```
+
+```{r}
+us %>% 
+  mutate(pre_id = as.character(pre_id)) %>% 
+  filter(pre_id %in% usf3) %>% 
+  select(pre_x, pre_y, pre_z) -> ussyn
+```
+
+```{r}
+#plot the synapses
+points3d(dssyn, col = 'magenta')
+points3d(ussyn, add = T, col = 'cyan')
+```
+
+```{r}
+#get the root id l2 skeletons
+fafbseg::read_l2skel(id) -> idskel
+fafbseg::read_l2skel(dsf3) -> dsskel
+fafbseg::read_l2skel(usf3) -> usskel
+```
+
+```{r}
+#plot the fw skeletons on top of the synapses
+plot3d(idskel, col = 'red')
+plot3d(dsskel, add = T, col = 'yellow')
+plot3d(usskel, add = T, col = 'blue')
+```
+
+```{r}
+#Now choose a cell type, and get all the neurons in that cell type 
+#going to look at SMP018
+info = flytable_list_rows('info', chunksize = 10000)
+info %>% 
+  filter(!status %in% c("bad_nucleus", "duplicate", "not_a_neuron")) %>% 
+  filter(!cell_class %in% c("glia", "putative_glia")) %>% 
+  filter(!super_class %in% "not_a_neuron")-> infof
+```
+
+```{r}
+infof %>% 
+  filter(grepl("KCab", cell_type)) -> KCab
+KCab$root_id[1:50] -> ids
+```
+
+```{r}
+#Fetch all the upstream and downstream partners of all the neurons in that type.
+flywire_partners(ids, partners = 'both') -> kpartners
+
+kpartners %>% 
+  mutate(pre_id = as.character(pre_id)) %>% 
+  mutate(post_id = as.character(post_id)) ->kpartners
+```
+
+```{r}
+#What are the top 3 upstream types and top 3 downstream types?
+left_join(kpartners, infof[, c("root_id", "cell_type")], by = c('pre_id' = 'root_id')) -> usct
+#add cell types for the post ids
+#will get duplicated columns, thats when the suffix = will come in 
+left_join(usct, infof[, c("root_id", "cell_type")], by = c('post_id' = 'root_id'), suffix = c('_pre', '_post')) -> usds
+usds
+```
+
+```{r}
+#What are the top 3 upstream types and top 3 downstream types?
+#instead of number of connections (counted by root_ids) want to group by cell type (pre and post) and add these up
+#need to split into upstream and downstream dataframes
+usds %>% 
+  filter(prepost==1) -> presyn #gives upstream data
+
+presyn %>% 
+  group_by(cell_type_pre, cell_type_post) %>% #want to count the number of times ids are repeated in the pre and post type columns 
+  summarise(connections = n()) %>% #and count these as number of connections in a new column called connections
+  ungroup() %>% 
+  arrange(desc(connections)) -> usdata #want to arrange in descending order
+
+#now get top three upstream cell type
+usdata %>% 
+  filter(!is.na(cell_type_pre)) ->usdata 
+
+usdata$cell_type_pre[1:3] -> us3
+us3
+```
+
+```{r}
+usds %>% 
+  filter(prepost==0) -> postsyn #gives downstream data
+
+postsyn %>% 
+  group_by(cell_type_pre, cell_type_post) %>% #want to count the number of times ids are repeated in the pre and post type columns 
+  summarise(connections = n()) %>% #and count these as number of connections in a new column called connections
+  ungroup() %>% 
+  arrange(desc(connections)) -> dsdata #want to arrange in descending order
+
+#now get top three upstream cell type
+dsdata %>% 
+  filter(!is.na(cell_type_post)) ->dsdata 
+
+dsdata$cell_type_post[1:3] -> ds3
+ds3
+```
+
