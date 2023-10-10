@@ -1,4 +1,4 @@
-# R-Club
+# coding-club
 File sharing for the tracers' R and python club
 
 Includes functions on plotting neurons, NBLASTing, clustering by morphology,
