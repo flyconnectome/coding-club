@@ -7,7 +7,7 @@ https://github.com/flyconnectome/pRecomputed
 * https://r-pkgs.org/
 * https://bookdown.org/rdpeng/RProgDA/building-r-packages.html
 
-This coding club was made up of two prompts and was designed with the new people joining the group in mind;
+This coding club had two prompts and was designed with the new people joining the group in mind;
 
 First prompt: 
 - Choose a neuron, whatever you like as long as it has upstream and downstream partners.
