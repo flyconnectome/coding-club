@@ -5,4 +5,4 @@ Includes functions on plotting neurons, NBLASTing, clustering by morphology,
 using googlesheets package to update sampling spreadsheets, making sampling curves by cumulative count of new neurons
 and making connectivity matrices and heatmaps.
 
-Link to googleslides with directions to find useful functions: https://docs.google.com/presentation/d/18ULlESQ7vdXHz4fkM2x3cIHV2m40GdpqqQ0N71RYni0/edit?usp=sharing
+Helpful information on relevant packages (in R and python) and useful courses can be found here: https://github.com/flyconnectome/how_to/blob/main/README.md 
