@@ -1,0 +1,203 @@
+---
+title: "PartnersSynapses_Visualisation"
+author: "Eva"
+date: "2024-01-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(natverse)
+library(dplyr)
+library(fafbseg)
+library(readr)
+library(elmr)
+library(clipr)
+```
+
+#Read TSV file into R
+```{r}
+data <- data.table::fread('https://raw.githubusercontent.com/flyconnectome/flywire_annotations/main/supplemental_files/Supplemental_file1_neuron_annotations.tsv') %>% 
+  # otherwise root_id is int64 
+  mutate(root_id = as.character(root_id))
+# this reads from github without you having to download the file 
+data
+```
+
+#A - pick a neuron
+```{r}
+data %>% 
+  filter(hemibrain_type == "AVLP409") -> dataf
+dataf
+#neuorn I have picked is 720575940614376594
+id = "720575940614376594"
+```
+
+#B - partners
+##retrieve the top 3 downstream partners and top 3 upstream partners and the location of their respective synapses
+```{r}
+flywire_partners(id, partners = "both", details = T) -> partners #add details = T to get the synapse location data
+partners
+```
+
+###downstream
+```{r}
+partners %>% 
+  filter(pre_id != post_id) %>% #remove autapses
+  filter(cleft_scores > 50) %>% #want cleft theshold > 50, is conventional cut off point to remove fake synapses
+  filter(prepost==0) -> ds #prepost=0 when the initial query neuron is upstream (presynaptic) and the partner is downstream
+```
+
+```{r}
+#get top three downstream partners
+ds %>% 
+  group_by(pre_id, post_id) %>% #want to count the number of times id pairs are repeated in the pre_id and post_id columns 
+  summarise(connections = n()) %>% #and count these as number of synapses in a new column called connections
+  ungroup() %>% 
+  arrange(desc(connections)) %>% #want to arrange in descending order
+  mutate(pre_id = as.character(pre_id), #change the ids from integer64 to characters
+         post_id = as.character(post_id)) -> dsf
+
+unique(dsf$post_id[1:3]) -> dsf3 #get the top 3 downstream partners from this dataframe
+dsf3
+```
+
+###upstream
+```{r}
+partners %>% 
+  filter(pre_id != post_id) %>% #remove autapses
+  filter(cleft_scores > 50) %>% #want cleft theshold > 50, is conventional cut off point to remove fake synapses
+  filter(prepost!=0) -> us #prepost=1 when the initial query neuron is downstream (postsynaptic) and the partner is upstream
+us
+```
+
+```{r}
+#get top three upstream partners
+us %>% 
+  group_by(pre_id, post_id) %>% #want to count the number of times ids are repeated in the pre_id and post_id columns 
+  summarise(connections = n()) %>% #and count these as number of connections in a new column called connections
+  ungroup() %>% 
+  arrange(desc(connections)) %>% #want to arrange in descending order
+  mutate(pre_id = as.character(pre_id), #change the ids from integer64 to characters
+         post_id = as.character(post_id)) -> usf
+
+unique(usf$pre_id[1:3]) -> usf3
+usf3
+```
+
+
+
+#C - visual analyses
+##Plot the main neuron in dark red, the synapse locations with downstream partners in medium red and the synapse locations with upstream partners in light red (i.e. use a colour scale).
+```{r}
+#get synapse data first
+ds %>% 
+  mutate(post_id = as.character(post_id)) %>% 
+  filter(post_id %in% dsf3) %>% 
+  select(pre_x, pre_y, pre_z) -> dssyn #have the xyz coordinates of the synapses with the top 3 downstream partners
+```
+
+```{r}
+us %>% 
+  mutate(pre_id = as.character(pre_id)) %>% 
+  filter(pre_id %in% usf3) %>% 
+  select(pre_x, pre_y, pre_z) -> ussyn #have the xyz coordinates of the synapses with the top 3 upstream partners
+```
+
+```{r}
+#get the l2 skeleton for the main neuron
+fafbseg::read_l2skel(id) -> idskel
+```
+
+```{r}
+#plot the main neuron and the synapses
+plot3d(idskel, col = 'darkred')
+points3d(dssyn, col = 'red')
+points3d(ussyn, add = T, col = 'pink')
+plot3d(elmr::FAFB)
+nview3d("frontal") #to specify the view
+#nview3d("posterior")
+```
+
+##Plot the neurons in a neuroglancer scene, where the main neuron is in one tab and is red, the downstream neurons are in another tab and are blue and the upstream neurons are also in their own tab and are green.
+```{r}
+#opened a neuroglancer link with a flywire tab and duplicated this tab twice
+#copied the ids into the appropiate tab and set the colour manually in the Render tab
+write_clip(id)
+write_clip(dsf3)
+write_clip(usf3)
+
+#here is the link: https://neuroglancer-demo.appspot.com//#!gs://flyem-user-links/short/2024-01-22.114615.json 
+```
+
+#D
+##Choose a type and get all the neurons in that type
+```{r}
+data %>% 
+  filter(hemibrain_type == "AVLP308") -> a
+```
+
+```{r}
+#Fetch all the upstream and downstream partners of all the neurons in that type.
+flywire_partners(a, partners = 'both') -> partner_types
+
+partner_types %>% 
+  filter(cleft_scores > 50) -> partner_types
+
+#turn the ids into characters in the dataframe
+partner_types %>% 
+  mutate(pre_id = as.character(pre_id)) %>% 
+  mutate(post_id = as.character(post_id)) ->partner_types 
+```
+
+#E - partner types
+##What are the top 3 upstream types and top 3 downstream types ?
+```{r}
+#to get the upstream types, will need to combine the partner_types and dataf dataframes by root id and cell type (where pre_id in partner_types is equal to root_id in dataf)
+left_join(partner_types, data[, c("root_id", "cell_type")], by = c('pre_id' = 'root_id')) -> usct
+
+#now add cell types for the post ids
+left_join(usct, data[, c("root_id", "cell_type")], by = c('post_id' = 'root_id'), suffix = c('_pre', '_post')) -> usds
+usds
+
+#now have all of the upstream and downstream types but need to count them to find the top 3
+```
+###top 3 upstream
+```{r}
+#instead of number of connections (counted by root_ids) want to group by cell type (pre and post) and add these up
+#need to split into upstream and downstream dataframes
+usds %>% 
+  filter(prepost==1) -> presyn #gives upstream data
+
+presyn %>% 
+  group_by(cell_type_pre, cell_type_post) %>% #want to count the number of times ids are repeated in the pre and post type columns 
+  summarise(connections = n()) %>% #and count these as number of connections in a new column called connections
+  ungroup() %>% 
+  arrange(desc(connections)) -> usdata #want to arrange in descending order
+
+#now get top three upstream cell type
+usdata %>% 
+  filter(!is.na(cell_type_pre)) ->usdata 
+
+usdata$cell_type_pre[2:4] -> us3
+us3
+```
+
+###top 3 downstream
+```{r}
+usds %>% 
+  filter(prepost==0) -> postsyn #gives downstream data
+
+postsyn %>% 
+  group_by(cell_type_pre, cell_type_post) %>% #want to count the number of times ids are repeated in the pre and post type columns 
+  summarise(connections = n()) %>% #and count these as number of connections in a new column called connections
+  ungroup() %>% 
+  arrange(desc(connections)) -> dsdata #want to arrange in descending order
+
+#now get top three upstream cell type
+dsdata %>% 
+  filter(!is.na(cell_type_post)) ->dsdata 
+
+dsdata$cell_type_post[2:4] -> ds3
+ds3
+```
+
