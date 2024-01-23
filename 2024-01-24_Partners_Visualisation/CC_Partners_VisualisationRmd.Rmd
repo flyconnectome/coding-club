@@ -108,13 +108,25 @@ us %>%
 fafbseg::read_l2skel(id) -> idskel
 ```
 
+##create colour gradient
+```{r}
+# Create a vector of values
+x <- c(ussyn, dssyn, idskel)
+
+# Define a color gradient from light red to dark red
+red_gradient <- colorRampPalette(c("lightcoral", "darkred"))
+
+# Generate colors based on the gradient
+colors <- red_gradient(3) #divide the colour gradient into 3
+```
+
 ```{r}
 #plot the main neuron and the synapses
-plot3d(idskel, col = 'darkred')
-points3d(dssyn, col = 'red')
-points3d(ussyn, add = T, col = 'pink')
+plot3d(idskel, col = colors[[3]]) #choose the darkest colour in the gradient
+points3d(dssyn, col = colors[[2]]) #choose the middle colour in the gradent
+points3d(ussyn, add = T, col = colors[[1]]) #choose the lightest colour in the gradient
 plot3d(elmr::FAFB)
-nview3d("frontal") #to specify the view
+#nview3d("frontal") #to specify the view
 #nview3d("posterior")
 ```
 
