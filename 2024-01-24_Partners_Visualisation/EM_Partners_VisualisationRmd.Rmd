@@ -110,9 +110,6 @@ fafbseg::read_l2skel(id) -> idskel
 
 ##create colour gradient
 ```{r}
-# Create a vector of values
-x <- c(ussyn, dssyn, idskel)
-
 # Define a color gradient from light red to dark red
 red_gradient <- colorRampPalette(c("lightcoral", "darkred"))
 
