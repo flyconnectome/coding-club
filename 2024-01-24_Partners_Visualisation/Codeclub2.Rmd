@@ -1,0 +1,260 @@
+---
+title: "CodeClub2"
+output: html_document
+date: "2024-01-22"
+---
+# download necessary libraries
+```{r}
+library(fafbseg)
+library(dplyr)
+```
+
+# save data as df
+```{r}
+options(scipen = 999)
+data <- read.delim(file='CodeClub_data.tsv')
+
+```
+
+# filter data by hemibrain type AVLP370 to pick a suitable neuron
+```{r}
+potentials <- data %>% filter(hemibrain_type=='AVLP370')
+chosen1 <-potentials[1,2]
+print(chosen1)
+
+
+chosen1 <- "720575940613867938"
+chosen1specs <- data %>%
+  filter(root_id == 720575940613867938) 
+```
+
+
+# filter to find top 3 downstream partners
+```{r}
+Dstream <- flywire_partners("720575940613867938", partners = "output", details = TRUE)
+
+Top3D <- Dstream %>%
+  filter(cleft_scores > 50) %>%
+  filter(post_id != pre_id)
+
+top_3_downstream <- head(unique(Top3D$post_id), n = 3)
+
+Dsynapse1 <- "720575940398743124"
+Dsynapse2 <- "720575940633307327"
+Dsynapse3 <- "720575940401353683"
+
+Dsynapse_count <- table(Top3D$post_id)
+
+Dsynapse1_count <- Dsynapse_count[Dsynapse1]
+Dsynapse2_count <- Dsynapse_count[Dsynapse2]
+Dsynapse3_count <- Dsynapse_count[Dsynapse3]
+
+DsynapsesCount <- c(Dsynapse1_count, Dsynapse2_count, Dsynapse3_count)
+
+
+
+# find coordinates of synapses
+
+Dsynapse1_coords <- Top3D %>%
+  filter(post_id == Dsynapse1) %>%
+  select(post_x, post_y, post_z)
+
+Dsynapse2_coords <- Top3D %>%
+  filter(post_id == Dsynapse2) %>%
+  select(post_x, post_y, post_z)
+
+Dsynapse3_coords <- Top3D %>%
+  filter(post_id == Dsynapse3) %>%
+  select(post_x, post_y, post_z)
+
+
+Dsynapses_coords <- bind_rows(
+  Dsynapse1_coords %>% mutate(Synapse_ID = Dsynapse1),
+  Dsynapse2_coords %>% mutate(Synapse_ID = Dsynapse2),
+  Dsynapse3_coords %>% mutate(Synapse_ID = Dsynapse3)
+)
+                     
+```
+                     
+# filter to find top 3 upstream partners
+```{r}
+
+Upstream <- flywire_partners("720575940613867938", partners = "input", details = TRUE)
+
+Top3U <- Upstream %>%
+  filter(cleft_scores > 50) %>%
+  filter(pre_id != post_id)
+
+top_3_upstream <- head(unique(Top3U$pre_id), n = 3)
+
+Usynapse1 <- "720575940628567934"
+Usynapse2 <- "720575940623165257"
+Usynapse3 <- "720575940638077262"
+
+Usynapse_count <- table(Top3U$pre_id)
+
+Usynapse1_count <- Usynapse_count[Usynapse1]
+Usynapse2_count <- Usynapse_count[Usynapse2]
+Usynapse3_count <- Usynapse_count[Usynapse3]
+
+UsynapsesCount <- c(Usynapse1_count, Usynapse2_count, Usynapse3_count)
+
+
+
+# find coordinates of synapses
+
+Usynapse1_coords <- Top3U %>%
+  filter(pre_id == Usynapse1) %>%
+  select(pre_x, pre_y, pre_z)
+
+Usynapse2_coords <- Top3U %>%
+  filter(pre_id == Usynapse2) %>%
+  select(pre_x, pre_y, pre_z)
+
+Usynapse3_coords <- Top3U %>%
+  filter(pre_id == Usynapse3) %>%
+  select(pre_x, pre_y, pre_z)
+
+
+Usynapses_coords <- bind_rows(
+  Usynapse1_coords %>% mutate(Synapse_ID = Usynapse1),
+  Usynapse2_coords %>% mutate(Synapse_ID = Usynapse2),
+  Usynapse3_coords %>% mutate(Synapse_ID = Usynapse3)
+)
+                     
+```
+
+
+# plot 3D (need to add mesh)
+
+```{r}
+#get the l2 skeleton for the main neuron
+fafbseg::read_l2skel(chosen1) -> chosen1specs
+```
+
+
+
+```{r}
+open3d()
+#plot the main neuron and the synapses
+plot3d(chosen1specs, col = 'darkred')
+points3d(Dsynapses_coords, col = 'red')
+points3d(Usynapses_coords, add = T, col = 'lightcoral')
+plot3d(elmr::FAFB)
+nview3d("frontal") #to specify the view
+#nview3d("posterior")
+```
+
+*******
+
+
+##create colour gradient
+```{r}
+# Create a vector of values
+x <- c(chosen1specs, Dsynapses_coords, Usynapses_coords)
+
+# Define a color gradient from light red to dark red
+red_gradient <- colorRampPalette(c("lightcoral", "darkred"))
+
+# Generate colors based on the gradient
+mycolors <- red_gradient(3) #divide the colour gradient into 3
+```
+
+```{r}
+#plot the main neuron and the synapses
+plot3d(chosen1specs, col = mycolors[[3]]) #choose the darkest colour in the gradient
+points3d(Dsynapses_coords, col = mycolors[[2]]) #choose the middle colour in the gradent
+points3d(Usynapses_coords, add = T, col = mycolors[[1]]) #choose the lightest colour in the gradient
+plot3d(elmr::FAFB)
+#nview3d("frontal") #to specify the view
+#nview3d("posterior")
+```
+# 
+
+#opened a neuroglancer link with a flywire tab and duplicated this tab twice
+#copied the ids into the appropiate tab and set the colour manually in the Render tab
+https://neuroglancer-demo.appspot.com//#!gs://flyem-user-links/short/2024-01-23.081911.json
+
+# filter data by hemibrain type AVLP390 to pick a suitable neuron
+```{r}
+data %>% 
+  filter(hemibrain_type == "AVLP390") -> b
+
+
+```
+
+#  filter to find top 3 downstream
+```{r}
+flywire_partners(b, partners = 'both') -> partner_types
+
+partner_types %>% 
+  filter(cleft_scores > 50) -> partner_types
+
+#turn the ids into characters in the dataframe
+partner_types %>% 
+  mutate(pre_id = as.character(pre_id)) %>% 
+  mutate(post_id = as.character(post_id)) ->partner_types 
+```
+
+
+
+******************ROUGH
+AVLP390neurons <- AVLP390[1:4,1]
+AVLP390neurons <- c("76282330364297152", "82967841963483136", "82967704524481744", "76563942780113136")
+
+```{r}
+install.packages("viridis")
+
+```
+
+```{r}
+# Assuming you've loaded the necessary packages
+
+# Load the viridis package
+library(viridis)
+
+# Open 3D device
+open3d()
+
+# Plot the main neuron with a color gradient (viridis)
+plot3d(chosen1specs, col = viridis(nrow(chosen1specs)))
+
+# Add Dsynapses_coords with a red color gradient
+points3d(Dsynapses_coords, col = viridis(nrow(Dsynapses_coords)))
+
+# Add Usynapses_coords with a light coral color gradient
+points3d(Usynapses_coords, col = viridis(nrow(Usynapses_coords)), add = TRUE)
+
+# Optionally, plot additional data (elmr::FAFB)
+# plot3d(elmr::FAFB)
+
+# Set the view
+nview3d("frontal")  # You can try other views like "posterior", "right", "left", etc.
+```
+
+
+
+```{r}
+library(plotly)
+
+# Chosen1 specs
+mesh3d(chosen1specs)
+plot_chosen1 <- plot_ly(chosen1specs, x = ~pos_x, y = ~pos_y, z = ~pos_z, type = "scatter3d", mode = "markers",
+                        marker = list(color = "darkred", size = 4), name = "Chosen1 Specs")
+
+# Dsynapses_coords
+plot_Dsynapses <- plot_ly(Dsynapses_coords, x = ~post_x, y = ~post_y, z = ~post_z, type = "scatter3d", mode = "markers",
+                          marker = list(color = "red", size = 4), name = "Dsynapses Coords")
+
+# Usynapses_coords
+plot_Usynapses <- plot_ly(Usynapses_coords, x = ~pre_x, y = ~pre_y, z = ~pre_z, type = "scatter3d", mode = "markers",
+                          marker = list(color = "lightcoral", size = 4), name = "Usynapses Coords")
+
+# Combine plots
+combined_plot <- subplot(plot_chosen1, plot_Dsynapses, plot_Usynapses, nrows = 3)
+
+# Show the plot
+combined_plot
+
+
+```
