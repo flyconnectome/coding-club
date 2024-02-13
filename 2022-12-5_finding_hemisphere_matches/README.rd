@@ -13,3 +13,26 @@ L/R matches prompt;
     - one can plot neurons / skeletons in R/Python together, coloured by hemisphere, to see if they match. To do this, in R you need plot3d() or plot3d in python.
     - record matches in flywire_matching (manual, could get e.g. 10 matches. Please only record 1-1 matches on flywire_matching, by pasting the coordinates in the hemisphere_match_xyz column. 
     - compare e.g. number of synapses with the original match. For example, if your original neurons were a_L and a_R, and they are connected to b_L and b_R, respectively. You want to ask if the number of synapses between a_L and b_L is similar to a_R and b_R, for all the matches you found. If, among your 10 matches, there are cell-type level matches where you have multiple sister cells of the same type on the same side, you may want to 1) record them elsewhere for the time being; and 2) group them together as a ‘meta-neuron’ for synapse counting.
+
+
+Python code for l2 skeletons: 
+import navis as ns
+import skeletor as sk
+import pandas as pd
+
+from tqdm.auto import tqdm
+from fafbseg import flywire
+
+from navis.interfaces import r
+from cloudvolume import CloudVolume
+
+import numpy as np
+# if you get your ids from a column in a spreadsheet 
+ids = pd.read_clipboard(header=None)
+ids = np.asarray(ids)
+ids[0:5]
+l2_sk = flywire.l2_skeleton(ids)
+l2_sk.head()
+for n in l2_sk:
+   n.nodes['radius'] = 0
+ns.write_swc(l2_sk, '/Users/yijieyin/Downloads/DM2_CX')
