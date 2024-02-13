@@ -4,7 +4,7 @@ L/R matches prompt;
     - you can find many 1-1 matches here: https://flytable.mrc-lmb.cam.ac.uk/workspace/5/dtable/flywire_matching/?tid=Nscg&vid=0000. In R, you can get the table with one of these functions here (https://natverse.org/fafbseg/reference/index.html#flywire-annotations). In python you can use Philipp’s sea-serpent to access seatable.
     - ask for their up/downstream partners;
     - threshold so you have about hundreds of neurons;
-    - get their l2 skeletons (maybe there’s hemibrain neuron skeletons somewhere already? For FAFB neurons, if you are coding in R, use fafbseg::read_l2skel(); the old way of getting skeletons: is to copy the ids from R, go to python to get the l2 skeletons, download the skeletons, and then read them into R (Python code in thread));
+    - get their l2 skeletons (maybe there’s hemibrain neuron skeletons somewhere already? For FAFB neurons, if you are coding in R, use fafbseg::read_l2skel(); the old way of getting skeletons: is to copy the ids from R, go to python to get the l2 skeletons, download the skeletons, and then read them into R (Python code for l2 skeletons at end of this prompt));
     - transform /mirror (mirror_fafb()in package nat.jrcbrains) half of the skeletons - if you compare between hemibrain and FAFB neurons, then you want to transform e.g. hemibrain neurons into FAFB space; if you compare between LR of FAFB, then you mirror neurons.
     - nblast (packages nat and nat.nblast in R, fafbseg and navis in python) and cluster into dendrogram (useful article here, python here); you may want to plot the dendrogram with nodes coloured by side (see one way to do this here)
     - find a cutting height of dendrogram to generate more cross hemisphere matches; To check matches:
