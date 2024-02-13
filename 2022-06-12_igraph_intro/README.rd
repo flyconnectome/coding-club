@@ -1,8 +1,8 @@
 This coding club prompt was designed to be an introduction to iGraph although it proved complicated and a revised introductory iGraph coding club prompt can be found in the 2023-11-05_igraph_intro folder; 
 
-This coding club is an introduction to iGraph, a graph analysis package that exists in both R and Python. 
+iGraph is a graph analysis package that exists in both R and Python. 
 
-This prompt, made with Yijie's help, is primarily around AL information processing, but really only scrapes the surface of what iGraph can do. 
+This prompt is primarily around AL information processing, but really only scrapes the surface of what iGraph can do. 
 I encourage you all to mess around and explore other iGraph functions with the graph we're going to be making here.
 
 To make a graph of AL data:
