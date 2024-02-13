@@ -6,7 +6,7 @@ L/R matches prompt;
     - threshold so you have about hundreds of neurons;
     - get their l2 skeletons (maybe there’s hemibrain neuron skeletons somewhere already? For FAFB neurons, if you are coding in R, use fafbseg::read_l2skel(); the old way of getting skeletons: is to copy the ids from R, go to python to get the l2 skeletons, download the skeletons, and then read them into R (Python code for l2 skeletons at end of this prompt));
     - transform /mirror (mirror_fafb()in package nat.jrcbrains) half of the skeletons - if you compare between hemibrain and FAFB neurons, then you want to transform e.g. hemibrain neurons into FAFB space; if you compare between LR of FAFB, then you mirror neurons.
-    - nblast (packages nat and nat.nblast in R, fafbseg and navis in python) and cluster into dendrogram (useful article here, python here); you may want to plot the dendrogram with nodes coloured by side (see one way to do this here)
+    - nblast (packages nat and nat.nblast in R, fafbseg and navis in python) and cluster into dendrogram (useful article here (https://natverse.org/nat.nblast/articles/NBLAST-Clustering.html); you may want to plot the dendrogram with nodes coloured by side (see one way to do this here)
     - find a cutting height of dendrogram to generate more cross hemisphere matches; To check matches:
     - one can check how mixed the colours are on the dendrogram, to see if neurons from different hemispheres can be put into the same group;
     - one can plot in flywire which has a hemibrain neuron layer
