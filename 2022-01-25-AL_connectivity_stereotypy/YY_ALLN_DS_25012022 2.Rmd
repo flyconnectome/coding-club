@@ -1,0 +1,105 @@
+---
+title: "YY_coding_club_25012022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(fafbseg)
+library(clipr)
+library(dendextend)
+library(ggplot2)
+library(plyr)
+library(nat.nblast)
+library(randomcoloR)
+```
+
+Exercise: AL Connectivity stereotypy
+a. Read AL_library/AL_bodies seatable and extract all ALLNs (cell_class).
+b. Find downstream partners of ALLNs.
+c. Group ALLNs morphologically.
+d. Assess connectivity stereotypy from ALLNs to downstream partners - Plot normalised synapse count to downstream partners per ALLN morphological group.
+e. Plot morphological groups in different colours in a flywire scene.
+f. Plot locations of synapse clouds per morphological groups of ALLNs, divided by dendritic and axonal arbors. Do specific morphological groups innervate specific areas of the AL?
+
+```{r}
+flytable_alltables()
+```
+
+```{r}
+altable = flytable_list_rows('AL_bodies')
+head(altable)
+```
+
+```{r}
+with(altable, table(cell_class, root_duplicated))
+```
+
+## Find downstream partners of ALLNs.
+```{r}
+# This takes a very long time 
+# lnds = flywire_partners(unique(altable$root_id[altable$cell_class == 'ALLN']), partners = 'outputs', details = T, method = 'spine')
+# So instead let's only get synapse number for now, and take a small subset for locations 
+lnds = flywire_partner_summary(unique(altable$root_id[altable$cell_class == 'ALLN' & altable$root_id %in% names(neurons)]), 
+                               partners = 'outputs', 
+                               cleft.threshold = 30, 
+                               threshold = 4, 
+                               method = 'spine')
+```
+
+## Group ALLNs morphologically. 
+```{r}
+# copy ids to python for faster skeletonisation 
+write_clip(unique(altable$root_id[altable$cell_class == 'ALLN']))
+
+# read the skeletons from a folder 
+neurons = read.neurons('/Users/yijieyin/Downloads/ALLN_skeletons')
+# seems that many are small twigs, let's get rid of them 
+neuron.size = data.frame(ids = names(neurons), 
+                         NumSegs = sapply(neurons, function(x) x$NumSegs))
+ggplot(neuron.size, aes(x = NumSegs)) + 
+  geom_histogram() + 
+  scale_x_continuous(breaks = c(0,100,500,1000,2000,4000,6000), trans = 'log1p')
+# after some inspection, let's use NumSegs > 80 as the cut off - there will be some small segments in the data. 
+neurons = neurons[neuron.size$NumSegs > 80]
+```
+
+```{r}
+ # NBLAST 
+ message('NBLASTing...')
+ healed <- nlapply(neurons, stitch_neurons_mst)
+ neurons.dps <- dotprops(healed/1e3, k=5, resample = 1)
+ nbl <- nblast_allbyall(neurons.dps)
+ hc <- nhclust(scoremat = nbl) 
+ 
+ hc.dend <- as.dendrogram(hc)
+ plot(hc.dend)
+ heights_groups <- heights_per_k.dendrogram(hc.dend)
+ print(heights_groups[1:50])
+ 
+ group.num = as.numeric(readline('How many groups?'))
+ grouped <- ddply(data.frame(gr = 1:group.num), .(gr), function(x) data.frame(ids = subset(hc, k = group.num, groups = x), gr = x))
+ grouped$col <- factor(grouped$gr, labels = distinctColorPalette(group.num))
+ 
+ grouped.plot = do.call(dplyr::bind_rows, tapply(grouped$ids, grouped$col, function(x) sample(x, size = 4)))
+ grouped.plot = tidyr::pivot_longer(grouped.plot, everything(), names_to = 'col', values_to = 'ids')
+```
+
+## Plot morphological groups in different colours in a flywire scene.
+```{r}
+fw.url <- as.character(ngl_add_colours('https://ngl.flywire.ai/?json_url=https://globalv1.flywire-daf.com/nglstate/5579893458862080', grouped.plot[c('ids','col')]))
+browseURL(fw.url)
+```
+
+
+
+
+
+
+
+
+
+
+
+
