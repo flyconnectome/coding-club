@@ -1,0 +1,75 @@
+---
+title: "R Notebook"
+output: github_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+Coding club 13/03/2024
+
+```{r}
+library(malecns)
+library(fafbseg)
+library(coconatfly)
+library(elmr)
+library(nat)
+library(dplyr)
+# to login to male CNS neuprint server
+conn=mcns_neuprint()
+```
+
+1. pick a brain cell type that has been identified in both the FAFB (column name hemibrain_type) and malecns (column name type) datasets.
+LT87
+
+```{r}
+LT87=cf_ids('LT87', datasets = c('flywire', 'malecns'))
+
+```
+
+2. Next you need to pick 4/5 other types to use for the cosine analysis. 
+PS180, AVLP429, LAL007, CL064, MBON02
+```{r}
+central_fw=cf_meta(cf_ids(flywire = 'super_class:central'))
+central_mcns=mcns_body_annotations(query=list(class='central'))
+intersect(central_fw$type,central_mcns$type) %>% 
+  head(5)-> shared_central
+
+```
+
+3. Use the coconatfly package in R to run separate cosine plots per dataset AND/OR plot the neurons from both datasests onto one graph.
+
+```{r}
+ids=cf_ids('/type:LT87|PS180|AVLP429|LAL007|CL064|MBON02', datasets=c('flywire', 'malecns'))
+
+cf_cosine_plot(ids)
+
+```
+ 
+4. Plot the FAFB and malecns neurons you ran cosine clustering analysis on in the same space.
+
+```{r}
+# get flywire ids:
+ids_fw=cf_meta(cf_ids(flywire='/type:LT87|PS180|AVLP429|LAL007|CL064|MBON02'))
+
+# get mcns ids:
+cf_meta(cf_ids(malecns='/type:LT87|PS180|AVLP429|LAL007|CL064|MBON02')) %>% 
+  mutate(bodyid=id) -> ids_mcns
+
+# read fw l2 skel:
+l2_fw=read_l2skel(ids_fw) 
+
+# transform fw l2 skel from FAFB to malecns and plot:
+xform_brain(l2_fw, sample = FAFB14, reference = "malecns") %>% 
+  plot3d(col = 'red')
+
+# plot mcns l2 skel: 
+l2_mcns=read_mcns_neurons(ids_mcns) 
+l2_mcns %>%
+  plot3d(col = 'blue')
+
+# plot mcns brain:
+plot3d(malecns.surf, alpha=.1)
+
+clear3d()
+```
+
