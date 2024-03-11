@@ -1,0 +1,199 @@
+---
+title: "cosine_transform"
+output: html_document
+date: "2024-02-26"
+---
+
+```{r setup, include=FALSE}
+library(fafbseg)
+library(neuprintr)
+library(dplyr)
+library(clipr)
+library(arrow)
+library(malecns)
+library(coconatfly)
+library(elmr)
+```
+
+
+#Task #1 - Cosine clustering
+
+##pick a brain cell type that has been identified in both the FAFB (column name hemibrain_type) and malecns (column name type) datasets. Feel free to pick any cell type that is only in the brain, such as any visual (projection/centrifugal) neurons, MBONs, or Fru+ - related neurons
+
+###FAFB data
+```{r}
+#read in the published fafb data
+#this reads from github without you having to download the file 
+fafb_info <- data.table::fread('https://raw.githubusercontent.com/flyconnectome/flywire_annotations/main/supplemental_files/Supplemental_file1_neuron_annotations.tsv') %>% 
+  mutate(root_id = as.character(root_id)) #otherwise root_id is int64 
+
+fafb_info #have a look at the table
+```
+
+```{r}
+#pick type of interest
+"MBON01" -> type_oi
+
+fafb_type <- fafb_info[fafb_info$hemibrain_type == "MBON01", ] #pick out the FAFB ids of interest and their metadata
+fafb_type
+```
+
+```{r}
+fafb_ids <- fafb_type$root_id #pick out just the ids
+write_clip(fafb_ids) #have a look at them in a neuroglancer scene
+```
+
+###maleCNS data
+```{r}
+neuprint_login(server="https://neuprint-cns.janelia.org", dataset = "cns") #login to neurpint and the malecns dataset
+```
+
+
+```{r}
+#neuprint_search("MBON.*", field = "type", meta=TRUE) #to get the ids and metadata for all MBONS in the dataset
+
+mcns_type <- neuprint_search("MBON01", field = "type", meta=TRUE) #pick out the malecns ids of interest and their metadata
+```
+
+```{r}
+mcns_ids <- mcns_type$bodyid
+clipr::write_clip(mcns_ids) #look at malecns ids in a neuroglancer scene
+```
+
+
+##Pick 4/5 other types to use for the cosine analysis. For this you can use the intersect() function to search for more central brain/visual projection/visual centrifugal neurons that exist in both datasets
+```{r}
+#pick out FAFB types that are central brain/visual projection/visual centrifugal neurons
+fafb_info %>% 
+  filter(super_class == c("visual_centrifugal", "visual_projection", "central")) %>% 
+  filter(!is.na(hemibrain_type)) %>% 
+  filter(hemibrain_type!="") %>% 
+  distinct(hemibrain_type) -> fafb_types
+```
+
+```{r}
+#pick out malecns types that are central brain/visual projection/visual centrifugal neurons
+mda = mcns_dvid_annotations() #look at how the data/metadata is organised
+```
+
+```{r}
+mda %>% 
+  filter(class == c("visual_centrifugal", "visual_projection", "central")) %>% 
+  filter(!is.na(type)) %>% 
+  filter(type!="") %>% 
+  distinct(type) -> mcns_types
+```
+
+```{r}
+#find the common types
+intersect(fafb_types$hemibrain_type, mcns_types$type) -> common_types
+
+#randomly pick 4 types from these common types (that are not your type of interest)
+sample(common_types, 4) -> random_types
+random_types
+```
+
+
+##Cosine plots
+###FAFB cosine plot
+```{r}
+#paste the neurons of the types generated above into a neuroglancer link (along with the ids of the type of interest), inspect and copy the fafb ids here
+fw_ids <- unlist(strsplit(read_clip(), ', ')) #turn the ids into characters
+```
+
+```{r}
+cf_cosine_plot(cf_ids(flywire = fw_ids), threshold = 1, interactive = T)
+```
+
+###malecns cosine plot
+```{r}
+#paste the neurons of the types generated above into a neuroglancer link (along with the ids of the type of interest), inspect and copy the malecns ids here
+mcns_ids <- unlist(strsplit(read_clip(), ', ')) #turn the ids into characters
+```
+
+```{r}
+cf_cosine_plot(cf_ids(malecns = mcns_ids), threshold = 1, interactive = T)
+```
+
+###multi dataset cosine plot
+```{r}
+cf_cosine_plot(cf_ids(flywire = fw_ids, malecns = mcns_ids), threshold = 1, interactive = T)
+```
+
+
+#Task #2 - Template brain transform
+
+##plot the FAFB and malecns neurons you ran cosine clustering analysis on in the same space
+
+###set colour gradient 
+```{r}
+#for fw ids colour grandient
+# Define a color gradient from light blue to dark blue
+blue_gradient <- colorRampPalette(c("lightblue", "darkblue"))
+
+# Generate colors based on the gradient
+bg <- blue_gradient(5) #divide the colour gradient into 5 as we have 5 types
+```
+
+
+```{r}
+#need to divide the fw_ids according to hemibrain_type
+#put the type of interest and the random types into one vector
+c(type_oi, random_types) -> types
+
+#get the ids and metadata for the random_types
+fafb_info[fafb_info$hemibrain_type %in% types, ] -> types_meta
+
+# Get unique values in the hemibrain_type column
+unique_types <- unique(types_meta$hemibrain_type)
+
+# Loop through each unique type
+for (i in seq_along(unique_types)) {
+  # Filter the dataframe and select the root_id column
+  result <- types_meta[types_meta$hemibrain_type == unique_types[i], "root_id"]
+  
+  # Convert root_id entries to characters and assign names
+  result_char <- unlist(result)
+  names(result_char) <- paste0(letters[i], "_fwids")
+  
+  # Assign the result to the global environment
+  assign(paste0(letters[i], "_fwids"), result_char)
+}
+
+# Access the results directly in the global environment
+
+```
+
+```{r}
+#NEED TO FIGURE OUT HOW TO TRANSFORM MULTIPLE SKELETONS INTO MALECNS SPACE
+
+
+#download fw l2 skeletons
+#fafbseg::read_l2skel(fw_ids) -> fw_skels
+fafbseg::read_l2skel(a_fwids) -> a_fw_skel
+fafbseg::read_l2skel(b_fwids) -> b_fw_skel
+fafbseg::read_l2skel(c_fwids) -> c_fw_skel
+fafbseg::read_l2skel(d_fwids) -> d_fw_skel
+fafbseg::read_l2skel(e_fwids) -> e_fw_skel
+```
+
+
+```{r}
+#download malecns l2 skeletons
+#read_mcns_neurons(mcns_ids) -> mcns_skels
+```
+
+```{r}
+#transform fw skeletons to malecns space and plot (if not using colour gradient)
+xform_brain(fw_skels, sample = FAFB14, reference = "malecns") %>% 
+  plot3d(col = "blue")
+plot3d(mcns_skels, col = "green") #plot mcns neurons in the same space
+plot3d(malecns.surf, alpha=.1) #plot the malecns brain template
+```
+
+
+
+
+
+
+
