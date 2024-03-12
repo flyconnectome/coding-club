@@ -34,7 +34,7 @@ fafb_info #have a look at the table
 #pick type of interest
 "MBON01" -> type_oi
 
-fafb_type <- fafb_info[fafb_info$hemibrain_type == "MBON01", ] #pick out the FAFB ids of interest and their metadata
+fafb_type <- fafb_info[fafb_info$hemibrain_type == type_oi, ] #pick out the FAFB ids of interest and their metadata
 fafb_type
 ```
 
@@ -52,7 +52,7 @@ neuprint_login(server="https://neuprint-cns.janelia.org", dataset = "cns") #logi
 ```{r}
 #neuprint_search("MBON.*", field = "type", meta=TRUE) #to get the ids and metadata for all MBONS in the dataset
 
-mcns_type <- neuprint_search("MBON01", field = "type", meta=TRUE) #pick out the malecns ids of interest and their metadata
+mcns_type <- neuprint_search(type_oi, field = "type", meta=TRUE) #pick out the malecns ids of interest and their metadata
 ```
 
 ```{r}
@@ -94,54 +94,17 @@ random_types
 ```
 
 
-##Cosine plots
-###FAFB cosine plot
 ```{r}
-#paste the neurons of the types generated above into a neuroglancer link (along with the ids of the type of interest), inspect and copy the fafb ids here
-fw_ids <- unlist(strsplit(read_clip(), ', ')) #turn the ids into characters
-```
-
-```{r}
-cf_cosine_plot(cf_ids(flywire = fw_ids), threshold = 1, interactive = T)
-```
-
-###malecns cosine plot
-```{r}
-#paste the neurons of the types generated above into a neuroglancer link (along with the ids of the type of interest), inspect and copy the malecns ids here
-mcns_ids <- unlist(strsplit(read_clip(), ', ')) #turn the ids into characters
-```
-
-```{r}
-cf_cosine_plot(cf_ids(malecns = mcns_ids), threshold = 1, interactive = T)
-```
-
-###multi dataset cosine plot
-```{r}
-cf_cosine_plot(cf_ids(flywire = fw_ids, malecns = mcns_ids), threshold = 1, interactive = T)
-```
-
-
-#Task #2 - Template brain transform
-
-##plot the FAFB and malecns neurons you ran cosine clustering analysis on in the same space
-
-###set colour gradient 
-```{r}
-#for fw ids colour grandient
-# Define a color gradient from light blue to dark blue
-blue_gradient <- colorRampPalette(c("lightblue", "darkblue"))
-
-# Generate colors based on the gradient
-bg <- blue_gradient(5) #divide the colour gradient into 5 as we have 5 types
-```
-
-
-```{r}
-#need to divide the fw_ids according to hemibrain_type
-#put the type of interest and the random types into one vector
+#need to divide the FW and malecns ids according to hemibrain_type/type
+#put the type of interest and the random types into one vector (the types vector does not have ids - applicable to both datasets)
 c(type_oi, random_types) -> types
+```
 
-#get the ids and metadata for the random_types
+```{r}
+######################FLYWIRE IDS FORLOOP###########################
+#create a for loop to get the ids and metadata for the random_types and assign them to vectors
+
+#get ids and metadata
 fafb_info[fafb_info$hemibrain_type %in% types, ] -> types_meta
 
 # Get unique values in the hemibrain_type column
@@ -165,11 +128,75 @@ for (i in seq_along(unique_types)) {
 ```
 
 ```{r}
-#NEED TO FIGURE OUT HOW TO TRANSFORM MULTIPLE SKELETONS INTO MALECNS SPACE
+######################MALECNS IDS FORLOOP###########################
+# Iterate over each unique value in 'types' and retrieve metadata
+for (i in seq_along(unique(types))) {
+  type <- unique(types)[i]
+  result <- neuprint_search(type, field = "type", meta = TRUE)
+  
+  # Extract bodyid information
+  bodyids <- result$bodyid
+  
+  # Assign the bodyids to vectors in the global environment
+  assign(paste0(letters[i], "_mids"), as.character(bodyids), envir = .GlobalEnv)
+}
+# Access the results directly in the global environment
+```
+
+##Cosine plots
+###FlyWire cosine plot
+```{r}
+fw_ids <- c(a_fwids, b_fwids, c_fwids, d_fwids, e_fwids) #want the fw ids in one vector for cosine plot
+
+cat(unlist(fw_ids), "\n") #print out the fw ids and paste them into a neuroglancer link and inspect them quickly
+```
+
+```{r}
+cf_cosine_plot(cf_ids(flywire = fw_ids), threshold = 1, interactive = T) #run a cosine plot 
+```
+
+###malecns cosine plot
+```{r}
+m_ids <- c(a_mids, b_mids, c_mids, d_mids, e_mids) #want the fw ids in one vector for cosine plot
+
+cat(unlist(m_ids), "\n") #print out the fw ids and paste them into a neuroglancer link and inspect them quickly
+```
+
+```{r}
+cf_cosine_plot(cf_ids(malecns = m_ids), threshold = 1, interactive = T)
+```
+
+###multi dataset cosine plot
+```{r}
+cf_cosine_plot(cf_ids(flywire = fw_ids, malecns = m_ids), threshold = 1, interactive = T)
+```
 
 
-#download fw l2 skeletons
-#fafbseg::read_l2skel(fw_ids) -> fw_skels
+#Task #2 - Template brain transform
+
+##plot the FAFB and malecns neurons you ran cosine clustering analysis on in the same space
+
+###set colour gradients 
+```{r}
+#for fw ids colour grandient
+# Define a color gradient from light blue to dark blue
+blue_gradient <- colorRampPalette(c("lightblue", "darkblue"))
+
+# Generate colors based on the gradient
+bg <- blue_gradient(5) #divide the colour gradient into 5 as we have 5 types
+```
+
+```{r}
+#for mcns ids colour grandient
+# Define a color gradient from light green to dark green
+green_gradient <- colorRampPalette(c("lightgreen", "darkgreen"))
+
+# Generate colors based on the gradient
+gg <- green_gradient(5) #divide the colour gradient into 5 as we have 5 types
+```
+
+```{r}
+#get fw l2 skeletons
 fafbseg::read_l2skel(a_fwids) -> a_fw_skel
 fafbseg::read_l2skel(b_fwids) -> b_fw_skel
 fafbseg::read_l2skel(c_fwids) -> c_fw_skel
@@ -177,13 +204,42 @@ fafbseg::read_l2skel(d_fwids) -> d_fw_skel
 fafbseg::read_l2skel(e_fwids) -> e_fw_skel
 ```
 
-
 ```{r}
-#download malecns l2 skeletons
-#read_mcns_neurons(mcns_ids) -> mcns_skels
+#get mcns l2 skeletons
+read_mcns_neurons(a_mids) -> a_mids_skel
+read_mcns_neurons(b_mids) -> b_mids_skel
+read_mcns_neurons(c_mids) -> c_mids_skel
+read_mcns_neurons(d_mids) -> d_mids_skel
+read_mcns_neurons(e_mids) -> e_mids_skel
 ```
 
 ```{r}
+xform_brain(a_mids_skel, sample = FAFB14, reference = "malecns") %>% #transform fw skeletons to malecns space and plot
+  plot3d(col = bg[[5]])
+xform_brain(b_mids_skel, sample = FAFB14, reference = "malecns") %>% 
+  plot3d(col = bg[[4]])
+xform_brain(c_mids_skel, sample = FAFB14, reference = "malecns") %>% 
+  plot3d(col = bg[[3]])
+xform_brain(d_mids_skel, sample = FAFB14, reference = "malecns") %>% 
+  plot3d(col = bg[[2]])
+xform_brain(e_mids_skel, sample = FAFB14, reference = "malecns") %>% 
+  plot3d(col = bg[[1]])
+plot3d(a_mids_skel, col = gg[[5]]) #plot malecns skeletons
+plot3d(b_mids_skel, col = gg[[4]])
+plot3d(c_mids_skel, col = gg[[3]])
+plot3d(d_mids_skel, col = gg[[2]])
+plot3d(e_mids_skel, col = gg[[1]])
+plot3d(malecns.surf, alpha=.1) #plot the malecns brain template
+```
+
+
+
+
+
+```{r}
+##############IF NOT DOING COLOUR GRADIENT ###################
+#if there is no colout gradient, no need to divide up the ids by hemibrain_type/type
+#just have fw_ids and mcns_ids and get their skeletons
 #transform fw skeletons to malecns space and plot (if not using colour gradient)
 xform_brain(fw_skels, sample = FAFB14, reference = "malecns") %>% 
   plot3d(col = "blue")
