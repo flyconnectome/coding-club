@@ -11,7 +11,7 @@ MBON01, MBON14, AVLP429, LT36, LT40.
   - For the Python users, here is a super quick example for using cocoa to co-cluster FlyWire and MCNS neurons. Make sure you update both fafbseg and cocoa to the most recent version;
     import cocoa as cc
 
-# Use the high-level convenience function
+Use the high-level convenience function
 # `x` and `y` can be lists of IDs or cell types
 cl = cc.generate_clustering(fw=x, mcns=y).compile()
 
