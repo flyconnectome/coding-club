@@ -65,7 +65,7 @@ clipr::write_clip(mcns_ids) #look at malecns ids in a neuroglancer scene
 ```{r}
 #pick out FAFB types that are central brain/visual projection/visual centrifugal neurons
 fafb_info %>% 
-  filter(super_class == c("visual_centrifugal", "visual_projection", "central")) %>% 
+  filter(super_class %in% c("visual_centrifugal", "visual_projection", "central")) %>% 
   filter(!is.na(hemibrain_type)) %>% 
   filter(hemibrain_type!="") %>% 
   distinct(hemibrain_type) -> fafb_types
@@ -78,7 +78,7 @@ mda = mcns_dvid_annotations() #look at how the data/metadata is organised
 
 ```{r}
 mda %>% 
-  filter(class == c("visual_centrifugal", "visual_projection", "central")) %>% 
+  filter(class %in% c("visual_centrifugal", "visual_projection", "central")) %>% 
   filter(!is.na(type)) %>% 
   filter(type!="") %>% 
   distinct(type) -> mcns_types
@@ -157,7 +157,7 @@ cf_cosine_plot(cf_ids(flywire = fw_ids), threshold = 1, interactive = T) #run a 
 
 ###malecns cosine plot
 ```{r}
-m_ids <- c(a_mids, b_mids, c_mids, d_mids, e_mids) #want the fw ids in one vector for cosine plot
+m_ids <- c(a_mids, b_mids, c_mids, d_mids, e_mids) #want the malecns ids in one vector for cosine plot
 
 cat(unlist(m_ids), "\n") #print out the fw ids and paste them into a neuroglancer link and inspect them quickly
 ```
@@ -196,6 +196,8 @@ gg <- green_gradient(5) #divide the colour gradient into 5 as we have 5 types
 ```
 
 ```{r}
+#fafbseg::read_l2skel(fw_ids) -> fw_skels
+
 #get fw l2 skeletons
 fafbseg::read_l2skel(a_fwids) -> a_fw_skel
 fafbseg::read_l2skel(b_fwids) -> b_fw_skel
@@ -205,6 +207,8 @@ fafbseg::read_l2skel(e_fwids) -> e_fw_skel
 ```
 
 ```{r}
+#read_mcns_neurons(m_ids) -> mcns_skels
+
 #get mcns l2 skeletons
 read_mcns_neurons(a_mids) -> a_mids_skel
 read_mcns_neurons(b_mids) -> b_mids_skel
@@ -231,9 +235,6 @@ plot3d(d_mids_skel, col = gg[[2]])
 plot3d(e_mids_skel, col = gg[[1]])
 plot3d(malecns.surf, alpha=.1) #plot the malecns brain template
 ```
-
-
-
 
 
 ```{r}
