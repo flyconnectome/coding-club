@@ -1,0 +1,171 @@
+---
+title: "Untitled"
+author: "Eva"
+date: "2024-06-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(fafbseg)
+library(dplyr)
+library(ggplot2)
+```
+
+#Overview: Here you will examine neurotransmitter expression in a short circuit in the brain. You will look for the top neurotransmitters expressed at each step. This circuit will start with an olfactory receptor neuron (ORN) and finish when you reach a descending neuron (DN).
+
+```{r}
+#Read TSV file into R and get the data
+data <- data.table::fread('https://raw.githubusercontent.com/flyconnectome/flywire_annotations/main/supplemental_files/Supplemental_file1_neuron_annotations.tsv') %>% 
+  # otherwise root_id is int64 
+  mutate(root_id = as.character(root_id))
+# this reads from github without you having to download the file 
+data
+```
+#Downstream NT expression 
+##first order neurons
+```{r}
+#start with ORN_DA1
+#pick our all of the ORN_DA1
+data %>% filter(hemibrain_type %in% "ORN_DA1") -> ORN_DA1
+```
+
+```{r}
+#what neurotransmitters do the ORN_DA1s express ?
+unique(ORN_DA1$top_nt)
+```
+
+```{r}
+#then look up the downstream partners and their associated neurotransmitters
+ORN_DA1$root_id -> ids
+flywire_partner_summary2(ids, partners = "outputs") -> outputs
+```
+
+```{r}
+#what neurotransmitters are being expressed
+unique(outputs$top_nt)
+```
+
+```{r}
+#get the number of synapses for each neurotransmitter
+outputs %>%  group_by(top_nt) %>% summarise(counts = sum(weight)) %>% arrange(desc(counts)) -> counts
+```
+
+##second order neurons
+```{r}
+#get the unique ids
+unique(outputs$post_pt_root_id) -> ids2
+as.character(ids2)
+```
+
+```{r}
+#get the downstream partners
+flywire_partner_summary2(ids2, partners = "outputs") -> outputs2
+```
+
+```{r}
+#see if you have reached any DNs
+outputs2 %>%  filter(grepl("^DN.+", hemibrain_type)) -> DNs
+#if there are DNs in the DNs vector then you are now at the end of your circuit !
+```
+
+```{r}
+#what neurotransmitters are being expressed
+unique(outputs2$top_nt)
+```
+
+```{r}
+#get the number of synapses for each neurotransmitter for the second order neurons
+outputs2 %>%  group_by(top_nt) %>% summarise(counts = sum(weight)) %>%  arrange(desc(counts)) -> counts2
+```
+
+
+#Plotting
+```{r}
+#plot only the neurons expressing the top two neurotransmitters at each hop
+#Colour-code the neurons according to their neurotransmitter and order (i.e. do a colour gradient for a neurotransmitter expressed by first and second order neurons)
+#what are the top two expressed neurotransmitters at the first hop ? Acetylcholine and gaba
+#what are the top two expressed neurotransmitters at the second hop ? Acetylcholine and gaba
+```
+
+```{r}
+outputs %>% filter(top_nt == "acetylcholine") -> a1 #find the first order neurons expressing acetylcholine
+unique(a1$post_pt_root_id) -> a1
+head(a1) -> a1 #just pick a few of them 
+as.character(a1)
+fafbseg::read_l2skel(a1) -> a1skel #get the l2 skeletons
+```
+
+```{r}
+outputs %>% filter(top_nt == "gaba") -> g1 #find the first order neurons expressing gaba
+unique(g1$post_pt_root_id) -> g1
+head(g1) -> g1 #just pick a few of them 
+as.character(g1)
+fafbseg::read_l2skel(g1) -> g1skel #get the l2 skeletons
+```
+
+```{r}
+outputs2 %>% filter(top_nt == "acetylcholine") -> a2 #find the second order neurons expressing acetylcholine
+unique(a2$post_pt_root_id) -> a2
+head(a2) -> a2 #just pick a few of them 
+as.character(a2)
+fafbseg::read_l2skel(a2) -> a2skel #get the l2 skeletons
+```
+
+```{r}
+outputs2 %>% filter(top_nt == "gaba") -> g2 #find the second order neurons expressing gaba
+unique(g2$post_pt_root_id) -> g2
+head(g2) -> g2 #just pick a few of them 
+as.character(g2)
+fafbseg::read_l2skel(g2) -> g2skel #get the l2 skeletons
+```
+
+```{r}
+#create acetylcholine colour gradient
+#create a vector of values
+x <- c(a1skel, a2skel)
+
+#define a color gradient from light red to dark red
+red_gradient <- colorRampPalette(c("lightcoral", "darkred"))
+
+#generate colors based on the gradient
+mycolors <- red_gradient(2) #divide the colour gradient into 3
+```
+
+```{r}
+#create gaba colour gradient
+#create a vector of values
+x <- c(g1skel, g2skel)
+
+#define a color gradient from light green to dark green
+red_gradient <- colorRampPalette(c("lightgreen", "darkgreen"))
+
+#generate colors based on the gradient
+mycolors_g <- red_gradient(2) #divide the colour gradient into 3
+```
+
+```{r}
+plot3d(a1skel, col = mycolors[[2]])
+plot3d(a2skel, col = mycolors[[1]])
+plot3d(g1skel, col = mycolors_g[[2]])
+plot3d(g2skel, col = mycolors_g[[1]])
+plot3d(elmr::FAFB.surf, alpha=.1) 
+```
+
+#Function Writing
+```{r}
+#Write your own function to automatically identify the neurotransmitters expressed by the downstream neurons of a given type, calculate the number of synapses for each neurotransmitter, and arrange them in descending order.
+downstream_partner_nts <- function(x) {
+  data %>% filter(hemibrain_type %in% x) -> a #filter the publicly available FAFB data for you type of interest
+  a$root_id -> ids #get the root ids for your type of interest
+  print("Fetching downstream partners") #get your function to write out a comment while it is running
+  flywire_partner_summary2(ids, partners = "outputs") -> outputs #find the downstream partners of your type of interest
+  outputs %>%  group_by(top_nt) %>% summarise(counts = sum(weight)) %>% arrange(desc(counts)) -> counts #calculate the number of synapses for each neurotransmitter and arrange them in descending order
+  return(counts)
+}
+```
+
+##use the function
+```{r}
+downstream_partner_nts("ORN_DA1")
+```
+
