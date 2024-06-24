@@ -15,7 +15,7 @@ Instructions:
     - Use plot3d(elmr::FAFB.surf, alpha=.1) to plot the FAFB brain mesh in r, and more information can be found here for python users.
 
 
-**Function Writing:**
+**Function Writing**
 
 Write your own function to automatically identify the neurotransmitters expressed by the downstream neurons of a given type, and calculate the number of synapses for each neurotransmitter. 
 Insert print("Fetching downstream partners") at the appropriate location so that the "Fetching downstream partners" message appears onscreen while the function is loading.
