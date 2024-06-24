@@ -14,6 +14,8 @@ Instructions:
     - Colour-code the neurons according to their neurotransmitter and order. If the same neurotransmitter is expressed by first and second order neurons, create a colour gradient for that neurotransmitter, e.g. first order neurons expressing gaba in a lighter green and second order neurons expressing gaba in a darker green.
     - Use plot3d(elmr::FAFB.surf, alpha=.1) to plot the FAFB brain mesh in r, and more information can be found here for python users.
 
+
 **Function Writing:**
+
 Write your own function to automatically identify the neurotransmitters expressed by the downstream neurons of a given type, and calculate the number of synapses for each neurotransmitter. 
 Insert print("Fetching downstream partners") at the appropriate location so that the "Fetching downstream partners" message appears onscreen while the function is loading.
