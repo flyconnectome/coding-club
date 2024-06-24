@@ -1,4 +1,4 @@
-This task involves the identification of neurotransmitters with an added bonus of writing your own function. We will use the publicly available FlyWire data for this exercise, and it can be downloaded from here.
+This task involves the identification of neurotransmitters with an added bonus of writing your own function. We will use the publicly available FlyWire data for this exercise, and it can be downloaded from [here](https://github.com/flyconnectome/flywire_annotations/blob/main/supplemental_files/Supplemental_file1_neuron_annotations.tsv).
 
 **Circuit Neurotransmitters**
 
