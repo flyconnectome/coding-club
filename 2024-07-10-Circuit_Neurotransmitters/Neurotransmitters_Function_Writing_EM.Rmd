@@ -26,7 +26,8 @@ data
 ```{r}
 #start with ORN_DA1
 #pick our all of the ORN_DA1
-data %>% filter(hemibrain_type %in% "ORN_DA1") -> ORN_DA1
+ORN_DA1 <- data %>% 
+  filter(hemibrain_type %in% "ORN_DA1") 
 ```
 
 ```{r}
@@ -36,8 +37,8 @@ unique(ORN_DA1$top_nt)
 
 ```{r}
 #then look up the downstream partners and their associated neurotransmitters
-ORN_DA1$root_id -> ids
-flywire_partner_summary2(ids, partners = "outputs") -> outputs
+ids <- ORN_DA1$root_id
+outputs <- flywire_partner_summary2(ids, partners = "outputs") 
 ```
 
 ```{r}
@@ -47,24 +48,28 @@ unique(outputs$top_nt)
 
 ```{r}
 #get the number of synapses for each neurotransmitter
-outputs %>%  group_by(top_nt) %>% summarise(counts = sum(weight)) %>% arrange(desc(counts)) -> counts
+counts <- outputs %>%  
+  group_by(top_nt) %>% 
+  summarise(counts = sum(weight)) %>% 
+  arrange(desc(counts)) 
 ```
 
 ##second order neurons
 ```{r}
 #get the unique ids
-unique(outputs$post_pt_root_id) -> ids2
+ids2 <- unique(outputs$post_pt_root_id)
 as.character(ids2)
 ```
 
 ```{r}
 #get the downstream partners
-flywire_partner_summary2(ids2, partners = "outputs") -> outputs2
+outputs2 <- flywire_partner_summary2(ids2, partners = "outputs") 
 ```
 
 ```{r}
 #see if you have reached any DNs
-outputs2 %>%  filter(grepl("^DN.+", hemibrain_type)) -> DNs
+DNs <- outputs2 %>% 
+  filter(grepl("^DN.+", hemibrain_type)) 
 #if there are DNs in the DNs vector then you are now at the end of your circuit !
 ```
 
@@ -75,7 +80,10 @@ unique(outputs2$top_nt)
 
 ```{r}
 #get the number of synapses for each neurotransmitter for the second order neurons
-outputs2 %>%  group_by(top_nt) %>% summarise(counts = sum(weight)) %>%  arrange(desc(counts)) -> counts2
+counts2 <- outputs2 %>%  
+  group_by(top_nt) %>% 
+  summarise(counts = sum(weight)) %>% 
+  arrange(desc(counts)) 
 ```
 
 
@@ -88,35 +96,36 @@ outputs2 %>%  group_by(top_nt) %>% summarise(counts = sum(weight)) %>%  arrange(
 ```
 
 ```{r}
-outputs %>% filter(top_nt == "acetylcholine") -> a1 #find the first order neurons expressing acetylcholine
-unique(a1$post_pt_root_id) -> a1
-head(a1) -> a1 #just pick a few of them 
+a1 <- outputs %>% filter(top_nt == "acetylcholine")  #find the first order neurons expressing acetylcholine
+a1<- unique(a1$post_pt_root_id)
+a1 <- head(a1)  #just pick a few of them 
 as.character(a1)
-fafbseg::read_l2skel(a1) -> a1skel #get the l2 skeletons
+a1skel <- fafbseg::read_l2skel(a1) #get the l2 skeletons
 ```
 
 ```{r}
-outputs %>% filter(top_nt == "gaba") -> g1 #find the first order neurons expressing gaba
-unique(g1$post_pt_root_id) -> g1
-head(g1) -> g1 #just pick a few of them 
+g1 <- outputs %>% 
+  filter(top_nt == "gaba") #find the first order neurons expressing gaba
+g1 <- unique(g1$post_pt_root_id) 
+g1 <- head(g1) #just pick a few of them 
 as.character(g1)
-fafbseg::read_l2skel(g1) -> g1skel #get the l2 skeletons
+g1skel <- fafbseg::read_l2skel(g1) #get the l2 skeletons
 ```
 
 ```{r}
-outputs2 %>% filter(top_nt == "acetylcholine") -> a2 #find the second order neurons expressing acetylcholine
-unique(a2$post_pt_root_id) -> a2
-head(a2) -> a2 #just pick a few of them 
+a2 <- outputs2 %>% filter(top_nt == "acetylcholine") #find the second order neurons expressing acetylcholine
+a2 <- unique(a2$post_pt_root_id)
+a2 <- head(a2) #just pick a few of them 
 as.character(a2)
-fafbseg::read_l2skel(a2) -> a2skel #get the l2 skeletons
+a2skel <- fafbseg::read_l2skel(a2) #get the l2 skeletons
 ```
 
 ```{r}
-outputs2 %>% filter(top_nt == "gaba") -> g2 #find the second order neurons expressing gaba
-unique(g2$post_pt_root_id) -> g2
-head(g2) -> g2 #just pick a few of them 
+g2 <- outputs2 %>% filter(top_nt == "gaba") #find the second order neurons expressing gaba
+g2 <- unique(g2$post_pt_root_id)
+g2 <- head(g2) #just pick a few of them 
 as.character(g2)
-fafbseg::read_l2skel(g2) -> g2skel #get the l2 skeletons
+g2skel <- fafbseg::read_l2skel(g2) #get the l2 skeletons
 ```
 
 ```{r}
