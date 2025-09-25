@@ -18,7 +18,7 @@ This challenge introduces how to use **NBLAST** on a population of neurons in Py
    - Set up required environment variables such as Flywire and Flytable.
 
 2. 🧠 **Neuron Data Handling**
-   - Retrieve ALPN neuron metadata from Flytable excluding the following statuses: Duplicate, Tiny or Fragment.
+   - Retrieve ALPN neuron metadata from Flytable excluding the following statuses: duplicate, tiny or fragment.
    - Retrieve neurons as simplified dotprops via FlyWire.
       - Python `fafbseg.flywire.get_l2_dotprops()`
       - R `read_l2dp()`
