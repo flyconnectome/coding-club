@@ -124,7 +124,7 @@ def raw2loc(coordinates):
     scaled_arr = arr * factors
     return scaled_arr.tolist()
 ```
-
+**Python**
 
 - Saves image at **high resolution**, ensuring readable x-axis labels.
 
