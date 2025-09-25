@@ -24,7 +24,7 @@ This challenge introduces how to use **NBLAST** on a population of neurons in Py
       - R `read_l2dp()`
 
 3. 🔄 **Mirroring registration**
-   - *Can be run using `aedes_mirroreg()`directly in R or following separately the steps below*
+   - *In R, you could run `aedes_mirroreg()`directly or follow separately the steps below*
       - Decode landmarks' URL to access annotation table.
         
          (Landmarks' coordinates can be found in pointA & pointB column of the annotations table)
