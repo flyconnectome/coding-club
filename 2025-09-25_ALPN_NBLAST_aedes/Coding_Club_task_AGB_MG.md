@@ -91,9 +91,8 @@ fafbseg::flywire_set_token()
 **Seatable token**
 ```
 flytable_set_token(user='xxx@gmail.com', pwd='yyy', url = "https://flytable.mrc-lmb.cam.ac.uk/")
-
-👉 *https://natverse.org/fafbseg/reference/flytable_login.html*
 ```
+👉 *https://natverse.org/fafbseg/reference/flytable_login.html*
 ---
 
 ## 📚 Required Libraries
