@@ -18,12 +18,13 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
    - Set up required environment variables such as Flywire and Flytable.
 
 2. 🧠 **Neuron Data Handling**
+   - Install the required packages and load all the necessary libraries.
    - Retrieve ALPN neuron metadata from Flytable excluding the following statuses: duplicate, tiny or fragment.
    - Retrieve neurons as simplified dotprops via FlyWire.
       - Python `fafbseg.flywire.get_l2_dotprops()`
       - R `read_l2dp()` 👉 *https://natverse.org/fafbseg/reference/read_l2skel.html*
 
-3. 🔄 **Mirroring registration**
+4. 🔄 **Mirroring registration**
    - *In R, you could run `aedes_mirroreg()`directly(see Key Functions & Conversions for details) or follow separately the steps below*
       - Decode landmarks' URL to access annotation table.
         
@@ -38,12 +39,12 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
          - Navis version of tps transform is not accessible like fafbseg R, keep reference and target coordinates as separate variables too (Python)
 
 
-4. 🔬 **Running NBLAST and clustering**
+5. 🔬 **Running NBLAST and clustering**
    - Run `nblast_allbyall` comparisons across the ALPN population.
    - Run hierarchical clustering.
       - linkage using arg `method = 'ward'` (Python)
 
-5. 📈 **Visualisation**
+6. 📈 **Visualisation**
    - Generate dendrogram.
    - Include root id, side, group & type on x axis.
    - Save images at high resolution.
