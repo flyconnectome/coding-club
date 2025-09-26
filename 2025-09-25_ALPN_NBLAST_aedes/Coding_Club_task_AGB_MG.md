@@ -21,7 +21,7 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
    - Install the required packages and load all the necessary libraries.
    - Retrieve ALPN neuron metadata from Flytable excluding the following statuses: duplicate, tiny or fragment.
    - Retrieve neurons as simplified dotprops via FlyWire.
-      - Python `fafbseg.flywire.get_l2_dotprops()` 👉
+      - Python `fafbseg.flywire.get_l2_dotprops()` 👉 *[https://fafbseg-py.readthedocs.io/fafbseg.flywire.get_l2_dotprops.html](https://fafbseg-py.readthedocs.io/en/latest/source/generated/fafbseg.flywire.get_l2_dotprops.html#fafbseg.flywire.get_l2_dotprops)*
       - R `read_l2dp()` 👉 *https://natverse.org/fafbseg/reference/read_l2skel.html*
 
 4. 🔄 **Mirroring registration**
@@ -37,17 +37,17 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
          - Use the **thin plate spine transform** to generate the transform for mirroring neurons (Python)
       - Mirror neurons on one side of the brain using `xform()`.
          - **R**      👉 *https://natverse.org/fafbseg/reference/xform.ngscene.html*
-         - **Python** 👉
+         - **Python** 👉 *https://navis-org.github.io/navis/reference/navis/#navis.xform*
          - Navis version of tps transform is not accessible like fafbseg R, keep reference and target coordinates as separate variables too (Python)
 
 
 5. 🔬 **Running NBLAST and clustering**
    - Run `nblast_allbyall()` comparisons across the ALPN population.
       - **R**      👉 *https://natverse.org/nat.nblast/reference/nblast_allbyall.html*
-      - **Python** 👉
-   - Run hierarchical clustering `nhclust()`
-      - **R**      👉 *https://natverse.org/nat.nblast/reference/nhclust.html*
-      - **Python** 👉 linkage using arg `method = 'ward'`
+      - **Python** 👉 *https://navis-org.github.io/navis/reference/navis/#navis.nblast_allbyall*
+   - Run hierarchical clustering
+      - **R**      👉 `nhclust()` *https://natverse.org/nat.nblast/reference/nhclust.html*
+      - **Python** 👉 `linkage()` using arg `method = 'ward'` *https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html*
 
 6. 📈 **Visualisation**
    - Generate dendrogram.
@@ -100,12 +100,12 @@ flytable_set_token(user='xxx@gmail.com', pwd='yyy', url = "https://flytable.mrc-
 
 ### Python
 Ensure the following Python libraries are installed:
-- `sea-serpent`
-- `navis`
-- `fafbseg`
-- `matplotlib`
-- `scipy`
-- `numpy`
+- `sea-serpent`         👉 *https://github.com/schlegelp/sea-serpent*
+- `navis`               👉 *https://navis-org.github.io/navis/reference/navis/*
+- `fafbseg`             👉 *https://fafbseg-py.readthedocs.io/en/latest/index.html*
+- `matplotlib`          👉 *https://matplotlib.org*
+- `scipy`               👉 *https://scipy.org*
+- `numpy`               👉 *https://numpy.org*
 
 ### R
 Ensure the following R libraries are installed:
