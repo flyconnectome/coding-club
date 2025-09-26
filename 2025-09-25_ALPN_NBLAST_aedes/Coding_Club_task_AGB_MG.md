@@ -36,8 +36,8 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
       - Generate transform with annotation table data.
          - Use the **thin plate spine transform** to generate the transform for mirroring neurons (Python)
       - Mirror neurons on one side of the brain using `xform()`.
-         -**R**      👉 *https://natverse.org/fafbseg/reference/xform.ngscene.html*
-         -**Python** 👉 
+         - **R**      👉 *https://natverse.org/fafbseg/reference/xform.ngscene.html*
+         - **Python**
          - Navis version of tps transform is not accessible like fafbseg R, keep reference and target coordinates as separate variables too (Python)
 
 
