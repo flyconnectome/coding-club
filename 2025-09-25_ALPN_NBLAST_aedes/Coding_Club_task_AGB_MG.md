@@ -157,7 +157,7 @@ def raw2loc(coordinates):
     aedes_mirror=nat::tpsreg(rbind(ptsA, ptsB), rbind(ptsB, ptsA))
 }
 ```
-
+**R & Python**
 - Saves image at **high resolution**, ensuring readable x-axis labels.
 
 ---
