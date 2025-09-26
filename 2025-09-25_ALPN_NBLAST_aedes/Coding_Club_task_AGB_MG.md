@@ -46,7 +46,8 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
       - **R**      👉 *https://natverse.org/nat.nblast/reference/nblast_allbyall.html*
       - **Python** 👉
    - Run hierarchical clustering `nhclust()`
-      - linkage using arg `method = 'ward'` (Python)
+      - **R**      👉 *https://natverse.org/nat.nblast/reference/nhclust.html*
+      - **Python** 👉 linkage using arg `method = 'ward'`
 
 6. 📈 **Visualisation**
    - Generate dendrogram.
