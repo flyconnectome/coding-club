@@ -1,6 +1,6 @@
 # 🧠 Python & R Coding Club Challenge: Running NBLAST on Neuron Populations
 
-This challenge introduces how to use **NBLAST** on a population of neurons in Python, leveraging tools for neuron morphology, visualisation, and connectomics data access. The workflow will take you from environment setup to data transformation, NBLAST execution, clustering and visualisation.
+This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuron.2016.06.012), a fast and sensitive algorithm to measure pairwise neuronal similarity on a population of neurons using Python & R. Specifically, you will perform NBLAST clustering for the ALPNs using the aedes dataset. The workflow will take you from environment setup to data transformation, NBLAST execution, clustering and visualisation.
 
 ---
 
@@ -21,7 +21,7 @@ This challenge introduces how to use **NBLAST** on a population of neurons in Py
    - Retrieve ALPN neuron metadata from Flytable excluding the following statuses: duplicate, tiny or fragment.
    - Retrieve neurons as simplified dotprops via FlyWire.
       - Python `fafbseg.flywire.get_l2_dotprops()`
-      - R `read_l2dp()`
+      - R `read_l2dp()` 👉 *https://natverse.org/fafbseg/reference/read_l2skel.html*
 
 3. 🔄 **Mirroring registration**
    - *In R, you could run `aedes_mirroreg()`directly or follow separately the steps below*
@@ -68,18 +68,26 @@ export FLYWIRE_DEFAULT_DATASET=wclee_aedes_brain
 ```
 
 To get your FlyWire token, visit:  
-👉 https://global.daf-apis.com/auth/api/v1/user/token  
+👉 *https://global.daf-apis.com/auth/api/v1/user/token*
 
 ### R
+
+**fafbseg package installation**
+
+👉 *https://natverse.org/fafbseg/index.html*
 
 **FlyWire token**
 ```
 library(fafbseg)
 fafbseg::flywire_set_token()
 ```
+*https://natverse.org/fafbseg/reference/flywire_set_token.html*
+
 **Seatable token**
 ```
-flytable_set_token(user, pwd, url = "https://flytable.mrc-lmb.cam.ac.uk/")
+flytable_set_token(user='xxx@gmail.com', pwd='yyy', url = "https://flytable.mrc-lmb.cam.ac.uk/")
+
+👉 *https://natverse.org/fafbseg/reference/flytable_login.html*
 ```
 ---
 
@@ -97,11 +105,13 @@ Ensure the following Python libraries are installed:
 ### R
 Ensure the following R libraries are installed:
 
-- `fafbseg`
-- `dplyr`
-- `library(nat.nblast)`
+- `fafbseg`             👉 *https://natverse.org/fafbseg/*
+- `dplyr`               👉 *https://dplyr.tidyverse.org/*
+- `library(nat.nblast)` 👉 *https://natverse.org/nat.nblast/*
 
 In addition, in order to access aedes specific functions you need to source `source("R/funs/aedes-dataset-funs.R")` after starting up the *2025aedes.Rproj* & choose the aedes dataset`choose_aedes()`.
+
+👉 *https://github.com/flyconnectome/2025aedes/blob/adf079ab86ca7a2f7c5746b03efc2466dae99edc/R/funs/aedes-dataset-funs.R*
 
 ---
 
@@ -126,6 +136,19 @@ def raw2loc(coordinates):
 ```
 **Python**
 
+```aedes_mirroreg <- function(units=c("microns", 'nm')) {
+  um='https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4693107724517376'
+  mann=fafbseg::ngl_annotations(um)
+  ptsA=with_aedes(fafbseg::flywire_raw2nm(mann$pointA))
+  ptsB=with_aedes(fafbseg::flywire_raw2nm(mann$pointB))
+  units=match.arg(units)
+  if(units=='microns')
+    aedes_mirror.um=nat::tpsreg(rbind(ptsA, ptsB)/1e3, rbind(ptsB, ptsA)/1e3)
+  else
+    aedes_mirror=nat::tpsreg(rbind(ptsA, ptsB), rbind(ptsB, ptsA))
+}
+```
+**R**
 - Saves image at **high resolution**, ensuring readable x-axis labels.
 
 ---
