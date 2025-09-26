@@ -143,7 +143,7 @@ def raw2loc(coordinates):
     return scaled_arr.tolist()
 ```
 **R**
--**Mirroring registration function**
+###**Mirroring registration function**
 
 ```aedes_mirroreg <- function(units=c("microns", 'nm')) {
   um='https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4693107724517376'
@@ -157,7 +157,7 @@ def raw2loc(coordinates):
     aedes_mirror=nat::tpsreg(rbind(ptsA, ptsB), rbind(ptsB, ptsA))
 }
 ```
-**R**
+
 - Saves image at **high resolution**, ensuring readable x-axis labels.
 
 ---
