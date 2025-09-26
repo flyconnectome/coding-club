@@ -111,6 +111,7 @@ Ensure the following Python libraries are installed:
 ### R
 Ensure the following R libraries are installed:
 
+- `natverse`            👉 *https://natverse.org/install/*
 - `fafbseg`             👉 *https://natverse.org/fafbseg/*
 - `dplyr`               👉 *https://dplyr.tidyverse.org/*
 - `library(nat.nblast)` 👉 *https://natverse.org/nat.nblast/*
