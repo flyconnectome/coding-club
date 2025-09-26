@@ -21,7 +21,7 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
    - Install the required packages and load all the necessary libraries.
    - Retrieve ALPN neuron metadata from Flytable excluding the following statuses: duplicate, tiny or fragment.
    - Retrieve neurons as simplified dotprops via FlyWire.
-      - Python `fafbseg.flywire.get_l2_dotprops()`
+      - Python `fafbseg.flywire.get_l2_dotprops()` 👉
       - R `read_l2dp()` 👉 *https://natverse.org/fafbseg/reference/read_l2skel.html*
 
 4. 🔄 **Mirroring registration**
@@ -35,12 +35,16 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
       - Convert Landmarks' coordinates (raw → µm).
       - Generate transform with annotation table data.
          - Use the **thin plate spine transform** to generate the transform for mirroring neurons (Python)
-      - Mirror neurons on one side of the brain using `xform`.
+      - Mirror neurons on one side of the brain using `xform()`.
+           **R**      👉 *https://natverse.org/fafbseg/reference/xform.ngscene.html*
+           **Python** 👉 
          - Navis version of tps transform is not accessible like fafbseg R, keep reference and target coordinates as separate variables too (Python)
 
 
 5. 🔬 **Running NBLAST and clustering**
-   - Run `nblast_allbyall` comparisons across the ALPN population.
+   - Run `nblast_allbyall()` comparisons across the ALPN population.
+     **R**      👉 *https://natverse.org/nat.nblast/reference/nblast_allbyall.html*
+     **Python** 👉
    - Run hierarchical clustering.
       - linkage using arg `method = 'ward'` (Python)
 
