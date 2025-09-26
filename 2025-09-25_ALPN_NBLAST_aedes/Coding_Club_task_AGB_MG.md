@@ -25,7 +25,7 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
       - R `read_l2dp()` 👉 *https://natverse.org/fafbseg/reference/read_l2skel.html*
 
 4. 🔄 **Mirroring registration**
-   - *In R, you could run `aedes_mirroreg()`directly(see Key Functions & Conversions for details) or follow separately the steps below*
+   - *In R, you could run `aedes_mirroreg()`directly(see Key Functions & Conversions for details) or follow separately the steps below:*
       - Decode landmarks' URL to access annotation table.
         
          (Landmarks' coordinates can be found in pointA & pointB column of the annotations table)
