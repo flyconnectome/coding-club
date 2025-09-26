@@ -122,6 +122,7 @@ In addition, in order to access aedes specific functions you need to source `sou
 
 ## 🧩 Key Functions & Conversions
 
+**Python**
 
 ### 📏 Unit Conversions
 - **Nanometers → Micrometers** (Essential for NBLAST algorithm):  
@@ -139,7 +140,8 @@ def raw2loc(coordinates):
     scaled_arr = arr * factors
     return scaled_arr.tolist()
 ```
-**Python**
+**R**
+-**Mirroring registration function**
 
 ```aedes_mirroreg <- function(units=c("microns", 'nm')) {
   um='https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4693107724517376'
