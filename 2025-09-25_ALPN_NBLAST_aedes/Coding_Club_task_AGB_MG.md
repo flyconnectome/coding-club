@@ -37,14 +37,14 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
          - Use the **thin plate spine transform** to generate the transform for mirroring neurons (Python)
       - Mirror neurons on one side of the brain using `xform()`.
          - **R**      👉 *https://natverse.org/fafbseg/reference/xform.ngscene.html*
-         - **Python**
+         - **Python** 👉
          - Navis version of tps transform is not accessible like fafbseg R, keep reference and target coordinates as separate variables too (Python)
 
 
 5. 🔬 **Running NBLAST and clustering**
    - Run `nblast_allbyall()` comparisons across the ALPN population.
-     **R**      👉 *https://natverse.org/nat.nblast/reference/nblast_allbyall.html*
-     **Python** 👉
+      - **R**      👉 *https://natverse.org/nat.nblast/reference/nblast_allbyall.html*
+      - **Python** 👉
    - Run hierarchical clustering.
       - linkage using arg `method = 'ward'` (Python)
 
