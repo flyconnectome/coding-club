@@ -45,7 +45,7 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
    - Run `nblast_allbyall()` comparisons across the ALPN population.
       - **R**      👉 *https://natverse.org/nat.nblast/reference/nblast_allbyall.html*
       - **Python** 👉
-   - Run hierarchical clustering.
+   - Run hierarchical clustering `nhclust()`
       - linkage using arg `method = 'ward'` (Python)
 
 6. 📈 **Visualisation**
