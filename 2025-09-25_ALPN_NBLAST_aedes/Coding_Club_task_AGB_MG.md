@@ -87,13 +87,12 @@ To get your FlyWire token, visit:
 library(fafbseg)
 fafbseg::flywire_set_token()
 ```
-*https://natverse.org/fafbseg/reference/flywire_set_token.html*
+👉 *https://natverse.org/fafbseg/reference/flywire_set_token.html*
 
 **Seatable token**
 ```
 flytable_set_token(user='xxx@gmail.com', pwd='yyy', url = "https://flytable.mrc-lmb.cam.ac.uk/")
 ```
-👉 *https://natverse.org/fafbseg/reference/flytable_login.html*
 ---
 
 ## 📚 Required Libraries
