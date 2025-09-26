@@ -1,6 +1,6 @@
 # 🧠 Python & R Coding Club Challenge: Running NBLAST on Neuron Populations
 
-This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuron.2016.06.012), a fast and sensitive algorithm to measure pairwise neuronal similarity on a population of neurons using Python & R. Specifically, you will perform NBLAST clustering for the ALPNs using the aedes dataset. The workflow will take you from environment setup to data transformation, NBLAST execution, clustering and visualisation.
+This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuron.2016.06.012), a fast and sensitive algorithm to measure pairwise neuronal similarity on a population of neurons using Python & R. Specifically, you will perform an NBLAST clustering of the ALPNs using the aedes dataset. The workflow will take you from environment setup to data transformation, NBLAST execution, clustering and visualisation.
 
 ---
 
