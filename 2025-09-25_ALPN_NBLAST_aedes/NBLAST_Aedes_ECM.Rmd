@@ -1,0 +1,152 @@
+---
+title: "NBLAST Aedes neurons"
+author: "E Marin"
+date: "2025-09-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load libraries
+
+```{r}
+library(natverse)
+library(fafbseg)
+library(dplyr)
+library(nat.nblast)
+library(dendroextras)
+#source("R/funs/aedes-dataset-funs.R")
+```
+
+# Retrieve Aedes metadata and filter for ALPNs of appropriate status
+
+```{r}
+bodyann_aedes = flytable_list_rows(table = "aedes_main", base = "aedes", chunksize = 10000)
+
+bodyann_aedes %>%
+  filter(class %in% "ALPN") %>%
+  filter(!grepl("duplicate", status)) %>%
+  filter(!grepl("fragment", status)) %>%
+  filter(!grepl("tiny", status)) %>%
+  filter(grepl("UNI", subclass)) %>%
+  filter(!is.na(root_id)) -> aedes_alpn
+nrow(aedes_alpn)
+
+# Marina's more elegant solution:
+# aedes=flytable_query("select * from aedes_main WHERE status NOT IN ('duplicate','fragment','tiny')")
+# aedes %>% 
+  #filter(class=="ALPN") ->aedes_alpns
+
+table(aedes_alpn$side, useNA = 'i')
+```
+# Filter by side
+
+```{r}
+aedes_alpn %>%
+  filter(grepl("R", side)) -> alpnr
+
+aedes_alpn %>%
+  filter(grepl("L", side)) -> alpnl
+
+aedes_alpn %>%
+  filter(grepl("M", side)) -> alpnm
+
+table(alpnr$side, useNA = 'i')
+table(alpnl$side, useNA = 'i')
+```
+
+# Retrieve neurons as simplified dotprops
+
+```{r}
+choose_aedes()
+alpnr.dps = read_l2dp(alpnr)
+alpnl.dps = read_l2dp(alpnl)
+#alpnm.dps = read_l2dp(alpnm)
+```
+
+## NBLAST clustering
+
+# Mirror one side
+
+```{r}
+aedes_mirroreg <- function(units=c("microns", 'nm')) {
+  um='https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4693107724517376'
+  mann=fafbseg::ngl_annotations(um)
+  ptsA=with_aedes(fafbseg::flywire_raw2nm(mann$pointA))
+  ptsB=with_aedes(fafbseg::flywire_raw2nm(mann$pointB))
+  units=match.arg(units)
+  if(units=='microns')
+    aedes_mirror.um=nat::tpsreg(rbind(ptsA, ptsB)/1e3, rbind(ptsB, ptsA)/1e3)
+  else
+    aedes_mirror=nat::tpsreg(rbind(ptsA, ptsB), rbind(ptsB, ptsA))
+}
+
+alpnl.dps.m = xform(alpnl.dps, reg = aedes_mirroreg())
+
+# Plot neurons to see whether this mirroring worked
+plot3d(alpnr.dps, col = "red", lwd = 2)
+plot3d(alpnl.dps.m, col = "blue", lwd = 2, add = TRUE)
+```
+
+# Combine these two neuron lists into one for NBLAST
+
+```{r}
+alpn.dps.all = c(alpnr.dps, alpnl.dps.m)
+length(alpn.dps.all)
+```
+
+# Add columns for annotations that we want to feature in the dendrogram
+
+```{r}
+# Marina's solution
+alpn.dps.all[,]=aedes_alpn
+```
+
+# Perform NBLAST all-by-all
+
+```{r}
+alpn.aba <- nblast_allbyall(alpn.dps.all, .progress='text')
+alpn.hc <- nhclust(scoremat = alpn.aba)
+```
+
+# Still need to change labels to desired annotations
+
+# Add dendrogram columns for labels
+```{r}
+# Marina's solution
+alpn.hc.meta=coconat::add_cluster_info(df = aedes_alpn, alpn.hc, k=40)
+```
+
+# Plot the dendrogram with labels for root_id, side, group, type
+
+# Marina's first solution, which did not work for me
+```{r}
+plot(alpn.hc, labels=glue::glue("{root_id}_{side}_{group}_{type}",
+                                  .envir = alpn.hc.meta), 
+         hang = -.01, 
+         cex = 0.5,
+         lwd = 0.6)
+
+abline(h=0.8, lty='dashed')
+```
+
+# Another possible solution
+
+```{r}
+pdf(file =  ("~/aedes_alpn_nblast_dendrogram.pdf"), 
+        width = 80, 
+        height = 10, 
+        family = 'Courier')
+    
+par(mar = c(5,3,1,0))
+alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpn$root_id, aedes_alpn$side, aedes_alpn$group, aedes_alpn$type, sep = "_"), 
+         hang = -.01, 
+         cex = 0.5,
+         lwd = 0.6)
+dev.off()
+```
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
