@@ -66,9 +66,7 @@ alpnl.dps = read_l2dp(alpnl)
 #alpnm.dps = read_l2dp(alpnm)
 ```
 
-## NBLAST clustering
-
-# Mirror one side
+# Mirror one side using Greg's landmarks
 
 ```{r}
 aedes_mirroreg <- function(units=c("microns", 'nm')) {
@@ -90,10 +88,43 @@ plot3d(alpnr.dps, col = "red", lwd = 2)
 plot3d(alpnl.dps.m, col = "blue", lwd = 2, add = TRUE)
 ```
 
+# Alternatively, use Seba's transform from point synapse cloud
+
+```{r}
+# Read points transform going from Aedes to Aedes symmetric
+aedesSym <- readRDS("/Users/elizabethmarin/Downloads/aedes_aedesSym_1000_tps.rds")
+
+# Template provide the origin for the synapse cloud
+aedesTemplate <- nat.templatebrains::templatebrain("aedes",
+                                                   voxdims = c(0.512,0.512,0.512),
+                                                   BoundingBox = structure(c(35.296, 698.848, 58.784, 522.144, 0, 336.896), 
+                                                                           dim = 2:3, class = "boundingbox"),
+                                                   units = c("microns","microns","microns"))
+```
+
+# Transform neurons into symmetric space and flip one side
+
+```{r}
+# Transform to Aedes symmetric
+alpnr.dps.sym <- nat::xform(alpnr.dps, reg = aedesSym)
+alpnl.dps.sym <- nat::xform(alpnl.dps, reg = aedesSym)
+
+# Flip neurons of one side in symmetric space
+alpnl.dps.sym.m <- nat.templatebrains::mirror_brain(x = alpnl.dps.sym, 
+                                                    brain = aedesTemplate, 
+                                                    mirrorAxis = "X", 
+                                                    transform = "flip")
+
+# Plot neurons to see whether this mirroring worked
+clear3d()
+plot3d(alpnr.dps.sym, col = "red", lwd = 2)
+plot3d(alpnl.dps.sym.m, col = "blue", lwd = 2, add = TRUE)
+```
+
 # Combine these two neuron lists into one for NBLAST
 
 ```{r}
-alpn.dps.all = c(alpnr.dps, alpnl.dps.m)
+alpn.dps.all = c(alpnr.dps.sym, alpnl.dps.sym.m)
 length(alpn.dps.all)
 ```
 
@@ -103,6 +134,7 @@ length(alpn.dps.all)
 # Marina's solution
 alpn.dps.all[,]=aedes_alpn
 ```
+
 
 # Perform NBLAST all-by-all
 
@@ -135,7 +167,7 @@ abline(h=0.8, lty='dashed')
 # Another possible solution
 
 ```{r}
-pdf(file =  ("~/aedes_alpn_nblast_dendrogram.pdf"), 
+pdf(file =  ("~/aedes_alpn_nblast_dendrogram_sebas.pdf"), 
         width = 80, 
         height = 10, 
         family = 'Courier')
@@ -146,6 +178,69 @@ alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpn$root_id, aedes_alpn$side, ae
          cex = 0.5,
          lwd = 0.6)
 dev.off()
+```
+
+## NBLAST clustering
+
+# Alternatively try Seba's transform
+
+```{r}
+# Read points transform going from Aedes to Aedes symmetric
+aedesSym <- readRDS("/Users/elizabethmarin/Downloads/aedes_aedesSym_1000_tps.rds")
+
+# Template provide the origin for the synapse cloud
+aedesTemplate <- nat.templatebrains::templatebrain("aedes",
+                                                   voxdims = c(0.512,0.512,0.512),
+                                                   BoundingBox = structure(c(35.296, 698.848, 58.784, 522.144, 0, 336.896), 
+                                                                           dim = 2:3, class = "boundingbox"),
+                                                   units = c("microns","microns","microns"))
+```
+
+# Use skeletons instead
+```{r}
+# Download PN skeletons and convert them to um
+choose_aedes()
+alpnr.um <- fafbseg::read_l2skel(alpnr$root_id)/1000
+alpnl.um <- fafbseg::read_l2skel(alpnl$root_id)/1000
+
+# Transform to Aedes symmetric
+alpnr.um.sym <- nat::xform(alpnr.um, reg = aedesSym)
+alpnl.um.sym <- nat::xform(alpnl.um, reg = aedesSym)
+
+# Flip neurons of one side in symmetric space
+alpnl.um.sym.flp <- nat.templatebrains::mirror_brain(x = alpnl.um.sym, 
+                                                    brain = aedesTemplate, 
+                                                    mirrorAxis = "X", 
+                                                    transform = "flip")
+
+# Plot neurons to see whether this mirroring worked
+clear3d()
+plot3d(alpnr.um.sym, col = "red", lwd = 2)
+plot3d(alpnl.um.sym.flp, col = "blue", lwd = 2, add = TRUE)
+
+# If needed transform back to original space
+#aedesPNs.flp <- nat::xform(aedesPNsSym.flp, reg = reglist(aedesSym, swap=TRUE))
+```
+
+# Combine these two neuron lists into one for NBLAST
+
+```{r}
+alpn.dps.all = c(alpnr.um.sym, alpnl.um.sym.flp)
+length(alpn.dps.all)
+```
+
+# Add columns for annotations that we want to feature in the dendrogram
+
+```{r}
+# Marina's solution
+alpn.dps.all[,]=aedes_alpn
+```
+
+# Perform NBLAST all-by-all
+
+```{r}
+alpn.aba <- nblast_allbyall(alpn.dps.all, .progress='text')
+alpn.hc <- nhclust(scoremat = alpn.aba)
 ```
 
 
