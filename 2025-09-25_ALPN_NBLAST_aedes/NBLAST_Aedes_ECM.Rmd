@@ -173,7 +173,7 @@ pdf(file =  ("~/aedes_alpn_nblast_dendrogram_sebas.pdf"),
         family = 'Courier')
     
 par(mar = c(5,3,1,0))
-alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpn$root_id, aedes_alpn$side, aedes_alpn$group, aedes_alpn$type, sep = "_"), 
+alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpn$root_id, aedes_alpn$side, aedes_alpn$group, aedes_alpn$axon_tract, aedes_alpn$hemilineage, sep = "_"), 
          hang = -.01, 
          cex = 0.5,
          lwd = 0.6)
