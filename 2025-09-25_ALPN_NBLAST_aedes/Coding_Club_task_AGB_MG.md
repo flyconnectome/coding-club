@@ -29,11 +29,11 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
       - Decode landmarks' URL to access annotation table.
         
          (Landmarks' coordinates can be found in pointA & pointB column of the annotations table)
-        ***Greg's point annotations
+        ### Greg's point annotations
          ```
          url = 'https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4693107724517376'
          ```
-         ***Valentina's glomeruli centroid annotations(including Greg's point annotations)
+         ### Valentina's glomeruli centroid annotations(including Greg's point annotations)
          ```
          url = 'https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4921787988049920'
          ```
