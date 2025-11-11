@@ -46,9 +46,8 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
          - Navis version of tps transform is not accessible like fafbseg R, keep reference and target coordinates as separate variables too (Python)
       
    - *If you want to try a mirroring registration using Seba's transform, you could find the details below:*
-     
          ```
-         url = 'https://flyconnectome.slack.com/archives/C08JP39THMM/p1759143312091199'
+         url = 'https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4921787988049920'
          ```
 
 5. 🔬 **Running NBLAST and clustering**
