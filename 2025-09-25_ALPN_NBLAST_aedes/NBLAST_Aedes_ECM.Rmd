@@ -30,8 +30,8 @@ bodyann_aedes %>%
   filter(!grepl("duplicate", status)) %>%
   filter(!grepl("fragment", status)) %>%
   filter(!grepl("tiny", status)) %>%
-  filter(grepl("UNI", subclass)) %>%
-  filter(grepl("mALT", axon_tract)) %>%
+  #filter(grepl("UNI", subclass)) %>%
+  #filter(grepl("mALT", axon_tract)) %>%
   filter(!is.na(root_id)) -> aedes_alpn
 nrow(aedes_alpn)
 
@@ -67,7 +67,7 @@ alpnl.dps = read_l2dp(alpnl)
 #alpnm.dps = read_l2dp(alpnm)
 ```
 
-# Mirror one side using Greg's landmarks
+## First mirror one side using Greg's landmarks
 
 ```{r}
 aedes_mirroreg <- function(units=c("microns", 'nm')) {
@@ -89,12 +89,102 @@ plot3d(alpnr.dps, col = "red", lwd = 2)
 plot3d(alpnl.dps.m, col = "blue", lwd = 2, add = TRUE)
 ```
 
-# Alternatively, use Seba's transform from point synapse cloud
+# Combine these two neuron lists into one for NBLAST
+
+```{r}
+alpn.dps.all = c(alpnr.dps, alpnl.dps.m)
+length(alpn.dps.all)
+```
+
+# Add columns for annotations that we want to feature in the dendrogram
+
+```{r}
+# Marina's solution
+alpn.dps.all[,]=aedes_alpn
+```
+
+# Perform NBLAST all-by-all
+
+```{r}
+alpn.aba <- nblast_allbyall(alpn.dps.all, .progress='text')
+alpn.hc <- nhclust(scoremat = alpn.aba)
+```
+
+# Plot the dendrogram, changing labels to desired annotations
+
+```{r}
+pdf(file =  ("~/aedes_alpn_nblast_dendrogram_12_12_2025.pdf"), 
+        width = 80, 
+        height = 10, 
+        family = 'Courier')
+    
+par(mar = c(5,3,1,0))
+alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpn$root_id, aedes_alpn$side, aedes_alpn$group, aedes_alpn$axon_tract, aedes_alpn$type, sep = "_"), 
+         hang = -.01, 
+         cex = 0.5,
+         lwd = 0.6)
+dev.off()
+```
+
+## Repeat but include Valentina's centroids
+
+```{r}
+aedes_mirroreg <- function(units=c("microns", 'nm')) {
+  um='https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4921787988049920'
+  mann=fafbseg::ngl_annotations(um)
+  ptsA=with_aedes(fafbseg::flywire_raw2nm(mann$pointA))
+  ptsB=with_aedes(fafbseg::flywire_raw2nm(mann$pointB))
+  units=match.arg(units)
+  if(units=='microns')
+    aedes_mirror.um=nat::tpsreg(rbind(ptsA, ptsB)/1e3, rbind(ptsB, ptsA)/1e3)
+  else
+    aedes_mirror=nat::tpsreg(rbind(ptsA, ptsB), rbind(ptsB, ptsA))
+}
+
+alpnl.dps.m = xform(alpnl.dps, reg = aedes_mirroreg())
+
+# Plot neurons to see whether this mirroring worked
+plot3d(alpnr.dps, col = "red", lwd = 2)
+plot3d(alpnl.dps.m, col = "blue", lwd = 2, add = TRUE)
+```
+
+# Combine these two neuron lists into one for NBLAST
+
+```{r}
+alpn.dps.all = c(alpnr.dps, alpnl.dps.m)
+length(alpn.dps.all)
+```
+
+# Perform NBLAST all-by-all
+
+```{r}
+alpn.aba <- nblast_allbyall(alpn.dps.all, .progress='text')
+alpn.hc <- nhclust(scoremat = alpn.aba)
+```
+
+# Plot the dendrogram, changing labels to desired annotations
+
+```{r}
+pdf(file =  ("~/aedes_alpn_nblast_dendrogram_12_12_2025_glom.pdf"), 
+        width = 80, 
+        height = 10, 
+        family = 'Courier')
+    
+par(mar = c(5,3,1,0))
+plot(alpn.hc, 
+         hang = -.01, 
+         cex = 0.5,
+         lwd = 0.6)
+dev.off()
+```
+
+
+## Alternatively, use Seba's transform from point synapse cloud (5000 is much slower than 1000)
 
 ```{r}
 # Read points transform going from Aedes to Aedes symmetric
-#aedesSym <- readRDS("/Users/elizabethmarin/Downloads/aedes_aedesSym_1000_tps.rds")
-aedesSym <- readRDS("/Users/elizabethmarin/Downloads/aedes_aedesSym_5000_tps.rds")
+aedesSym <- readRDS("/Users/elizabethmarin/Downloads/aedes_aedesSym_1000_tps.rds")
+#aedesSym <- readRDS("/Users/elizabethmarin/Downloads/aedes_aedesSym_5000_tps.rds")
 
 # Template provide the origin for the synapse cloud
 aedesTemplate <- nat.templatebrains::templatebrain("aedes",
@@ -137,15 +227,12 @@ length(alpn.dps.all)
 alpn.dps.all[,]=aedes_alpn
 ```
 
-
 # Perform NBLAST all-by-all
 
 ```{r}
 alpn.aba <- nblast_allbyall(alpn.dps.all, .progress='text')
 alpn.hc <- nhclust(scoremat = alpn.aba)
 ```
-
-# Still need to change labels to desired annotations
 
 # Add dendrogram columns for labels
 ```{r}
@@ -154,6 +241,21 @@ alpn.hc.meta=coconat::add_cluster_info(df = aedes_alpn, alpn.hc, k=40)
 ```
 
 # Plot the dendrogram with labels for root_id, side, group, type
+
+```{r}
+pdf(file =  ("~/aedes_alpn_mALT_nblast_dendrogram_1000_12_12_2025.pdf"), 
+        width = 80, 
+        height = 10, 
+        family = 'Courier')
+
+par(mar = c(5,3,1,0))
+plot(alpn.hc,
+         hang = -.01, 
+         cex = 0.5,
+         lwd = 0.6)
+dev.off()
+```
+
 
 # Marina's first solution, which did not work for me
 ```{r}
@@ -169,7 +271,7 @@ abline(h=0.8, lty='dashed')
 # Another possible solution
 
 ```{r}
-pdf(file =  ("~/aedes_alpn_mALT_nblast_dendrogram_5000.pdf"), 
+pdf(file =  ("~/aedes_alpn_mALT_nblast_dendrogram_1000.pdf"), 
         width = 80, 
         height = 10, 
         family = 'Courier')
@@ -184,7 +286,7 @@ dev.off()
 
 ## NBLAST clustering
 
-# Alternatively try Seba's transform
+# Alternatively try Seba's transform using skeletons
 
 ```{r}
 # Read points transform going from Aedes to Aedes symmetric
@@ -196,10 +298,7 @@ aedesTemplate <- nat.templatebrains::templatebrain("aedes",
                                                    BoundingBox = structure(c(35.296, 698.848, 58.784, 522.144, 0, 336.896), 
                                                                            dim = 2:3, class = "boundingbox"),
                                                    units = c("microns","microns","microns"))
-```
 
-# Use skeletons instead
-```{r}
 # Download PN skeletons and convert them to um
 choose_aedes()
 alpnr.um <- fafbseg::read_l2skel(alpnr$root_id)/1000
@@ -224,19 +323,11 @@ plot3d(alpnl.um.sym.flp, col = "blue", lwd = 2, add = TRUE)
 #aedesPNs.flp <- nat::xform(aedesPNsSym.flp, reg = reglist(aedesSym, swap=TRUE))
 ```
 
+# Still need to convert these to dotprops
+
 # Combine these two neuron lists into one for NBLAST
 
-```{r}
-alpn.dps.all = c(alpnr.um.sym, alpnl.um.sym.flp)
-length(alpn.dps.all)
-```
-
 # Add columns for annotations that we want to feature in the dendrogram
-
-```{r}
-# Marina's solution
-alpn.dps.all[,]=aedes_alpn
-```
 
 # Perform NBLAST all-by-all
 
