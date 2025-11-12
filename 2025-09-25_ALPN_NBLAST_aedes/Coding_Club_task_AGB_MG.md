@@ -29,8 +29,13 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
       - Decode landmarks' URL to access annotation table.
         
          (Landmarks' coordinates can be found in pointA & pointB column of the annotations table)
+        ### Greg's point annotations
          ```
          url = 'https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4693107724517376'
+         ```
+         ### Valentina's glomeruli centroid annotations(including Greg's point annotations)
+         ```
+         url = 'https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4921787988049920'
          ```
       - Convert Landmarks' coordinates (raw → µm).
       - Generate transform with annotation table data.
@@ -39,7 +44,12 @@ This challenge introduces how to use **NBLAST** (https://doi.org/10.1016/j.neuro
          - **R**      👉 *https://natverse.org/fafbseg/reference/xform.ngscene.html*
          - **Python** 👉 *https://navis-org.github.io/navis/reference/navis/#navis.xform*
          - Navis version of tps transform is not accessible like fafbseg R, keep reference and target coordinates as separate variables too (Python)
+      
+   - *If you want to try a mirroring registration using Seba's transform, you could find the details below:*
 
+            ```
+            url = 'https://flyconnectome.slack.com/archives/C08JP39THMM/p1759143312091199'
+            ```
 
 5. 🔬 **Running NBLAST and clustering**
    - Run `nblast_allbyall()` comparisons across the ALPN population.
