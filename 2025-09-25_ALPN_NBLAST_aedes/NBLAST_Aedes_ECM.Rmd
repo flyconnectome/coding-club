@@ -31,6 +31,7 @@ bodyann_aedes %>%
   filter(!grepl("fragment", status)) %>%
   filter(!grepl("tiny", status)) %>%
   filter(grepl("UNI", subclass)) %>%
+  filter(grepl("mALT", axon_tract)) %>%
   filter(!is.na(root_id)) -> aedes_alpn
 nrow(aedes_alpn)
 
@@ -92,7 +93,8 @@ plot3d(alpnl.dps.m, col = "blue", lwd = 2, add = TRUE)
 
 ```{r}
 # Read points transform going from Aedes to Aedes symmetric
-aedesSym <- readRDS("/Users/elizabethmarin/Downloads/aedes_aedesSym_1000_tps.rds")
+#aedesSym <- readRDS("/Users/elizabethmarin/Downloads/aedes_aedesSym_1000_tps.rds")
+aedesSym <- readRDS("/Users/elizabethmarin/Downloads/aedes_aedesSym_5000_tps.rds")
 
 # Template provide the origin for the synapse cloud
 aedesTemplate <- nat.templatebrains::templatebrain("aedes",
@@ -167,13 +169,13 @@ abline(h=0.8, lty='dashed')
 # Another possible solution
 
 ```{r}
-pdf(file =  ("~/aedes_alpn_nblast_dendrogram_sebas.pdf"), 
+pdf(file =  ("~/aedes_alpn_mALT_nblast_dendrogram_5000.pdf"), 
         width = 80, 
         height = 10, 
         family = 'Courier')
     
 par(mar = c(5,3,1,0))
-alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpn$root_id, aedes_alpn$side, aedes_alpn$group, aedes_alpn$axon_tract, aedes_alpn$hemilineage, sep = "_"), 
+alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpn$root_id, aedes_alpn$side, aedes_alpn$group, aedes_alpn$axon_tract, aedes_alpn$type, sep = "_"), 
          hang = -.01, 
          cex = 0.5,
          lwd = 0.6)
