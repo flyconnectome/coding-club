@@ -16,6 +16,7 @@ library(dplyr)
 library(fafbseg)
 library(nat.nblast)
 library(nat.templatebrains)
+library(dendroextras)
 source("../funs/aedes-dataset-funs.R")
 choose_aedes()
 ```
@@ -53,7 +54,7 @@ boundingbox(alpns_dps)
 alpns_dps[,]=aedes_alpns
 ```
 
-#Plot ALPNs based by side
+#Plot ALPNs by side/Any with a wrong side annotation?
 ```{r}
 nclear3d()
   plot3d(alpns_dps, col=case_when(side=="R" ~'red' , 
@@ -61,24 +62,27 @@ nclear3d()
 ```
 
 
-#Mirroring registration
+##Mirroring registration
+#using Greg's point annotations
 
 ```{r}
-u="https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4693107724517376"
+um="https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4693107724517376"
 
-aedes_mirror.um=aedes_mirroreg()
+aedes_mirrored.um=aedes_mirroreg()
 ```
 
 ```{r}
-alpns.mirror=xform(alpns_dps, reg = aedes_mirror.um, subset = alpns_dps[,'side']=='L')
+alpns.mirrored=xform(alpns_dps, reg = aedes_mirrored.um, subset = alpns_dps[,'side']=='L')
 nclear3d()
-plot3d(alpns.mirror, col=side)
+plot3d(alpns.mirrored, col=case_when(side=="R" ~'red' , 
+                               side=="L" ~ "green"))
 ```
 
 
 #Run the NBLAST
 ```{r}
-aba=nblast_allbyall(alpns.mirror, .progress='text')
+aba=nblast_allbyall(alpns.mirrored, .progress='text')
+head(aba)
 ```
 
 #Run hierarchical clustering
@@ -88,7 +92,7 @@ aba.hc=nhclust(aba)
 
 # I. Plot the neurons in the dendrogram with glue_data()
 ```{r}
-pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/osn_nblast_dendrograms/pnhcm-201025_a.pdf"), 
+pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/pn_nblast_dendrograms/pnhcm-121125_method1.pdf"), 
         width = 80, 
         height = 10, 
         family = 'Courier')
@@ -104,7 +108,7 @@ dev.off()
 ```
 # II. Plot the neurons in the dendrogram with glue()
 ```{r}
-pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/osn_nblast_dendrograms/pnhcm-201025_a.pdf"), 
+pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/pn_nblast_dendrograms/pnhcm-121125_method1.pdf"), 
         width = 80, 
         height = 10, 
         family = 'Courier')
@@ -122,7 +126,7 @@ dev.off()
 
 # III. Plot the neurons in the dendrogram with paste()
 ```{r}
-pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/osn_nblast_dendrograms/pnhcm-201025_c.pdf"), 
+pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/pn_nblast_dendrograms/pnhcm-121125_method1.pdf"), 
         width = 80, 
         height = 10, 
         family = 'Courier')
@@ -137,6 +141,61 @@ dev.off()
 ```
 
 
+#using Greg's point annotations + Valentina's glomeruli centroid annotations
+#Extract annotations from a neuroglancer scene
+
+```{r}
+um="https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4921787988049920"
+
+mann=ngl_annotations(um)
+mann
+```
+#Let's check that the points are all on the correct side
+```{r}
+nclear3d()
+spheres3d(flywire_raw2nm(mann$pointA), col='magenta',radius = 2000)
+spheres3d(flywire_raw2nm(mann$pointB), col='green',radius = 2000)
+```
+#Adjust the units and prepare the trasform
+```{r}
+ptsA=flywire_raw2nm(mann$pointA)
+ptsB=flywire_raw2nm(mann$pointB)
+aedes_mirror=nat::tpsreg(rbind(ptsA, ptsB), rbind(ptsB, ptsA))
+aedes_mirror.um=nat::tpsreg(rbind(ptsA, ptsB)/1e3, rbind(ptsB, ptsA)/1e3)
+```
+
+```{r}
+alpns.mirror=xform(alpns_dps, reg = aedes_mirror.um, subset = alpns_dps[,'side']=='L')
+nclear3d()
+plot3d(alpns.mirror, col=case_when(side=="R" ~'red' , 
+                               side=="L" ~ "green"))
+```
+
+#Run the NBLAST
+```{r}
+aba1=nblast_allbyall(alpns.mirror, .progress='text')
+head(aba1)
+```
+
+#Run hierarchical clustering
+```{r}
+aba.hc1=nhclust(aba1)
+```
+
+```{r}
+pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/pn_nblast_dendrograms/pnhcm-121125_method2.pdf"), 
+        width = 80, 
+        height = 10, 
+        family = 'Courier')
+    
+    par(mar = c(5,3,1,0))
+
+a<-plot(aba.hc1,labels=paste(aedes_alpns$root_id, aedes_alpns$side, aedes_alpns$group, aedes_alpns$type, sep = "_"), 
+         hang = -.01, 
+         cex = 0.5,
+         lwd = 0.6)
+dev.off()
+```
 ##Alternatively, 
 # Read points transform going from Aedes to Aedes symmetric
 ```{r}
@@ -157,40 +216,52 @@ aedesTemplate <- nat.templatebrains::templatebrain("aedes",
                                                    units = c("microns","microns","microns"))
 ```
 
-#Read l2 skeletons
-```{r}
-#aedesPNs.um <- read_l2skel(aedes_alpns$root_id)/1000
- #or 
- alpns_dps<-read_l2dp(aedes_alpns)
-
-```
-
 #Filter for RHS and LHS & M ALPNs
 
 ```{r}
 aedes_alpns %>% 
-  filter(side=="L") %>% pull(root_id)->alpns_l
-
+  filter(side=="L") %>% pull(root_id)->alpnsl
 aedes_alpns %>% 
-  filter(side=="R") %>% pull(root_id)->alpns_r
+  filter(side=="R") %>% pull(root_id)->alpnsr
 aedes_alpns %>% 
-  filter(side=="M") %>% pull(root_id)->alpns_m
+  filter(side=="M") %>% pull(root_id)->alpnsm
 ```
+
+#Read l2 skeletons or dotprops
+```{r}
+#aedesPNs.um <- read_l2skel(aedes_alpns$root_id)/1000
+ #or 
+#alpnl_dps<-read_l2dp(aedes_alpns)
+#or
+alpnsl_dps<-read_l2dp(alpnsl) 
+alpnsr_dps<-read_l2dp(alpnsr)
+alpnsm_dps<-read_l2dp(alpnsm)
+
+```
+
+
 
 # Transform to Aedes symmetric
 ```{r}
 
-aedesPNsSym <-xform(alpns_dps, reg = aedesSym)
+#aedesPNsSym <-xform(alpns_dps, reg = aedesSym)
 
-aedesPNsSym[alpns_l]->aedesPNsSym_l
-aedesPNsSym[alpns_r]->aedesPNsSym_r
-aedesPNsSym[alpns_m]->aedesPNsSym_m
+#aedesPNsSym[alpns_l]->aedesPNsSym_l
+#aedesPNsSym[alpns_r]->aedesPNsSym_r
+#aedesPNsSym[alpns_m]->aedesPNsSym_m
+#or
+alpnl_sym <- nat::xform(alpnsl_dps, reg = aedesSym)
+alpnr_sym <- nat::xform(alpnsr_dps, reg = aedesSym)
+alpnm_sym <- nat::xform(alpnsm_dps, reg = aedesSym)
+
+
+
 ```
 
 # Flip LHS neurons in symmetric space
 ```{r}
 
-aedesPNsSym.flp <- mirror_brain(x = aedesPNsSym_l, 
+alpnl_sym.flp <- mirror_brain(x = alpnl_sym, 
                                brain = aedesTemplate, 
                                mirrorAxis = "X", 
                                transform = "flip")
@@ -199,40 +270,79 @@ aedesPNsSym.flp <- mirror_brain(x = aedesPNsSym_l,
 
 #Plot them 
 ```{r}
-plot3d(aedesPNsSym_r,col="red")
-plot3d(aedesPNsSym.flp, col="green")
+nclear3d()
+plot3d(alpnr_sym,col="red")
+plot3d(alpnl_sym.flp, col="green")
 ```
 
-#Merge two neuronlists
+#Merge 3 neuronlists 
 ```{r}
-c(aedesPNsSym_r,aedesPNsSym.flp,aedesPNsSym_m)->aedesPNsSym_r_flp_m
+c(alpnl_sym.flp,alpnm_sym,alpnr_sym)->all_alpns
 ```
 
 #Run the NBLAST
 ```{r}
-aba1=nblast_allbyall(aedesPNsSym_r_flp_m, .progress='text')
+aba2=nblast_allbyall(all_alpns, .progress='text')
+head(aba2)
 ```
 
 #Run hierarchical clustering
 ```{r}
-aba.hc1=nhclust(aba1)
+aba.hc2=nhclust(aba2)
 ```
+#Plot the neurons in the dendrogram--> this way results in clusters where neurons mixed labels. However,this is not a problem with the mirroring registration. Follow the steps below to correctly label the neurons in the dendrogram. 
 
-
-#Plot the neurons in the dendrogram 
 ```{r}
-pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/osn_nblast_dendrograms/pnhcm-201025_b.pdf"), 
+pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/pn_nblast_dendrograms/pnhcm-121125_method1.pdf"), 
         width = 80, 
         height = 10, 
         family = 'Courier')
     
     par(mar = c(5,3,1,0))
-a<-plot(aba.hc1, labels=glue::glue_data(aedes_alpns,"{root_id}_{side}_{group}_{type}"), 
+
+a<-plot(aba.hc, labels=paste(aedes_alpns$root_id, aedes_alpns$side, aedes_alpns$group, aedes_alpns$type, sep = "_"), 
          hang = -.01, 
          cex = 0.5,
          lwd = 0.6)
+dev.off()
+```
+
+
+```{r}
+plot3d(aedesSym$BoundingBox)
+plot3d(all_alpns$`648518347659078018`,color = "green")#rootids you want to check
+plot3d(all_alpns$`648518347530670076`,color = "red")
+```
+
+#Reoeder the aedes_alpns to match the order of the final neuronlist
+
+```{r}
+rownames(aedes_alpns) <- aedes_alpns$root_id
+aedes_alpns_ordered <- aedes_alpns[names(all_alpns), ]
+```
+
+#Plot the neurons in the dendrogram 
+```{r}
+pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/pn_nblast_dendrograms/pnhcm-121125_method3.pdf"), 
+        width = 80, 
+        height = 10, 
+        family = 'Courier')
+    
+    par(mar = c(5,3,1,0))
+
+a<-plot(aba.hc2, labels=glue::glue_data(aedes_alpns_ordered,"{root_id}_{side}_{group}_{type}"), 
+         hang = -.01, 
+         cex = 0.5,
+        lwd = 0.6)
 
 dev.off()
-
 ```
+
+
+
+
+
+
+
+
 
