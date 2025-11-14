@@ -17,7 +17,7 @@ library(fafbseg)
 library(dplyr)
 library(nat.nblast)
 library(dendroextras)
-#source("R/funs/aedes-dataset-funs.R")
+#source("..R/funs/aedes-dataset-funs.R")
 ```
 
 # Retrieve Aedes metadata and filter for ALPNs of appropriate status
@@ -64,69 +64,10 @@ table(alpnl$side, useNA = 'i')
 choose_aedes()
 alpnr.dps = read_l2dp(alpnr)
 alpnl.dps = read_l2dp(alpnl)
-#alpnm.dps = read_l2dp(alpnm)
+alpnm.dps = read_l2dp(alpnm)
 ```
 
-## First mirror one side using Greg's landmarks
-
-```{r}
-aedes_mirroreg <- function(units=c("microns", 'nm')) {
-  um='https://spelunker.cave-explorer.org/#!middleauth+https://global.daf-apis.com/nglstate/api/v1/4693107724517376'
-  mann=fafbseg::ngl_annotations(um)
-  ptsA=with_aedes(fafbseg::flywire_raw2nm(mann$pointA))
-  ptsB=with_aedes(fafbseg::flywire_raw2nm(mann$pointB))
-  units=match.arg(units)
-  if(units=='microns')
-    aedes_mirror.um=nat::tpsreg(rbind(ptsA, ptsB)/1e3, rbind(ptsB, ptsA)/1e3)
-  else
-    aedes_mirror=nat::tpsreg(rbind(ptsA, ptsB), rbind(ptsB, ptsA))
-}
-
-alpnl.dps.m = xform(alpnl.dps, reg = aedes_mirroreg())
-
-# Plot neurons to see whether this mirroring worked
-plot3d(alpnr.dps, col = "red", lwd = 2)
-plot3d(alpnl.dps.m, col = "blue", lwd = 2, add = TRUE)
-```
-
-# Combine these two neuron lists into one for NBLAST
-
-```{r}
-alpn.dps.all = c(alpnr.dps, alpnl.dps.m)
-length(alpn.dps.all)
-```
-
-# Add columns for annotations that we want to feature in the dendrogram
-
-```{r}
-# Marina's solution
-alpn.dps.all[,]=aedes_alpn
-```
-
-# Perform NBLAST all-by-all
-
-```{r}
-alpn.aba <- nblast_allbyall(alpn.dps.all, .progress='text')
-alpn.hc <- nhclust(scoremat = alpn.aba)
-```
-
-# Plot the dendrogram, changing labels to desired annotations
-
-```{r}
-pdf(file =  ("~/aedes_alpn_nblast_dendrogram_12_12_2025.pdf"), 
-        width = 80, 
-        height = 10, 
-        family = 'Courier')
-    
-par(mar = c(5,3,1,0))
-alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpn$root_id, aedes_alpn$side, aedes_alpn$group, aedes_alpn$axon_tract, aedes_alpn$type, sep = "_"), 
-         hang = -.01, 
-         cex = 0.5,
-         lwd = 0.6)
-dev.off()
-```
-
-## Repeat but include Valentina's centroids
+## Perform mirroring registration including Valentina's glomerular centroids
 
 ```{r}
 aedes_mirroreg <- function(units=c("microns", 'nm')) {
@@ -151,8 +92,16 @@ plot3d(alpnl.dps.m, col = "blue", lwd = 2, add = TRUE)
 # Combine these two neuron lists into one for NBLAST
 
 ```{r}
-alpn.dps.all = c(alpnr.dps, alpnl.dps.m)
+alpn.dps.all = c(alpnr.dps, alpnl.dps.m, alpnm.dps)
 length(alpn.dps.all)
+```
+
+# Add columns for annotations that we want to feature in the dendrogram
+# These two lists need to be the same length
+
+```{r}
+# Marina's solution
+alpn.dps.all[,]=aedes_alpn
 ```
 
 # Perform NBLAST all-by-all
@@ -162,16 +111,23 @@ alpn.aba <- nblast_allbyall(alpn.dps.all, .progress='text')
 alpn.hc <- nhclust(scoremat = alpn.aba)
 ```
 
+# Reorder the aedes_alpn to match the order of the final neuronlist
+
+```{r}
+rownames(aedes_alpn) <- aedes_alpn$root_id
+aedes_alpns_ordered <- aedes_alpn[names(alpn.dps.all), ]
+```
+
 # Plot the dendrogram, changing labels to desired annotations
 
 ```{r}
-pdf(file =  ("~/aedes_alpn_nblast_dendrogram_12_12_2025_glom.pdf"), 
+pdf(file =  ("~/aedes_alpn_nblast_dendrogram_14_12_2025_glom.pdf"), 
         width = 80, 
         height = 10, 
         family = 'Courier')
     
 par(mar = c(5,3,1,0))
-plot(alpn.hc, 
+alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpns_ordered$root_id, aedes_alpns_ordered$side, aedes_alpns_ordered$group, aedes_alpns_ordered$axon_tract, aedes_alpns_ordered$type, sep = "_"), 
          hang = -.01, 
          cex = 0.5,
          lwd = 0.6)
@@ -200,6 +156,7 @@ aedesTemplate <- nat.templatebrains::templatebrain("aedes",
 # Transform to Aedes symmetric
 alpnr.dps.sym <- nat::xform(alpnr.dps, reg = aedesSym)
 alpnl.dps.sym <- nat::xform(alpnl.dps, reg = aedesSym)
+alpnm.dps.sym <- nat::xform(alpnm.dps, reg = aedesSym)
 
 # Flip neurons of one side in symmetric space
 alpnl.dps.sym.m <- nat.templatebrains::mirror_brain(x = alpnl.dps.sym, 
@@ -213,10 +170,10 @@ plot3d(alpnr.dps.sym, col = "red", lwd = 2)
 plot3d(alpnl.dps.sym.m, col = "blue", lwd = 2, add = TRUE)
 ```
 
-# Combine these two neuron lists into one for NBLAST
+# Combine the three neuron lists into one for NBLAST
 
 ```{r}
-alpn.dps.all = c(alpnr.dps.sym, alpnl.dps.sym.m)
+alpn.dps.all = c(alpnm.dps.sym, alpnr.dps.sym, alpnl.dps.sym.m)
 length(alpn.dps.all)
 ```
 
@@ -234,16 +191,43 @@ alpn.aba <- nblast_allbyall(alpn.dps.all, .progress='text')
 alpn.hc <- nhclust(scoremat = alpn.aba)
 ```
 
+# Reorder the aedes_alpn to match the order of the final neuronlist
+
+```{r}
+rownames(aedes_alpn) <- aedes_alpn$root_id
+aedes_alpns_ordered <- aedes_alpn[names(alpn.dps.all), ]
+```
+
+# Plot the dendrogram, changing labels to desired annotations
+
+```{r}
+pdf(file =  ("~/aedes_alpn_mALT_nblast_dendrogram_1000_14_12_2025.pdf"), 
+        width = 80, 
+        height = 10, 
+        family = 'Courier')
+    
+par(mar = c(5,3,1,0))
+alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpns_ordered$root_id, aedes_alpns_ordered$side, aedes_alpns_ordered$group, aedes_alpns_ordered$axon_tract, aedes_alpns_ordered$type, sep = "_"), 
+         hang = -.01, 
+         cex = 0.5,
+         lwd = 0.6)
+dev.off()
+```
+
+
+
 # Add dendrogram columns for labels
 ```{r}
 # Marina's solution
 alpn.hc.meta=coconat::add_cluster_info(df = aedes_alpn, alpn.hc, k=40)
 ```
 
+
+
 # Plot the dendrogram with labels for root_id, side, group, type
 
 ```{r}
-pdf(file =  ("~/aedes_alpn_mALT_nblast_dendrogram_1000_12_12_2025.pdf"), 
+pdf(file =  ("~/aedes_alpn_mALT_nblast_dendrogram_1000_14_12_2025.pdf"), 
         width = 80, 
         height = 10, 
         family = 'Courier')
