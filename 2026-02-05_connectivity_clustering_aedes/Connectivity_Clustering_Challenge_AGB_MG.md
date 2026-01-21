@@ -119,7 +119,17 @@ if __name__ == "__main__":
 This prevents multiprocessing issues on certain systems.
 
 The navis similarity calculation can often be slow or cause memory issues with large matrices.
-Using sklearn's `cosine_similarity` function 👉 *https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.cosine_similarity.html* can vastly speed up processing (due to multi-threaded processing) and an added layer of granuality when writing your code, though you will need to manually apply changes (e.g. thresholding) before runnning this function.
+Using sklearn's `cosine_similarity` function 👉 *https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.cosine_similarity.html* can vastly speed up processing (due to multi-threaded processing) and an added layer of granuality when writing your code, though you will need to manually apply changes (e.g. thresholding, matrix conversion) before runnning this function.
+
+###Example code 
+
+```python
+X = adjacency.to_numpy(dtype=np.float32)
+
+S = cosine_similarity(X)
+
+matching_scores = pd.DataFrame(S, index=adjacency.index, columns=adjacency.columns)
+```
 
 ## 📌 Notes
 
