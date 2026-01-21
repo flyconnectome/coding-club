@@ -121,7 +121,7 @@ This prevents multiprocessing issues on certain systems.
 The navis similarity calculation can often be slow or cause memory issues with large matrices.
 Using sklearn's `cosine_similarity` function 👉 *https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.cosine_similarity.html* can vastly speed up processing (due to multi-threaded processing) and an added layer of granuality when writing your code, though you will need to manually apply changes (e.g. thresholding, matrix conversion) before runnning this function.
 
-### Example code 
+#### Example code 
 
 ```python
 X = adjacency.to_numpy(dtype=np.float32)
