@@ -1,6 +1,6 @@
 # 🧠 Coding Club Challenge: ALPN Connectivity-cosine clustering (Python & R)
 
-This challenge introduces how to perform **connectivity-cosine clustering** on ALPNs using **Python and R**, focusing on synapse connectivity with sensory neurons. Participants will extract synaptic connectivity from the Aedes dataset and apply clustering and visualization methods to identify neuronal groups based on shared connectivity profiles.
+This challenge introduces how to perform **connectivity-cosine clustering** on ALPNs using **Python and R**, focusing on their upstream connectivity with sensory neurons. Participants will extract synaptic connectivity from the Aedes dataset and apply clustering and visualization methods to identify neuronal groups based on shared connectivity profiles.
 
 ---
 
