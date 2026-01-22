@@ -69,10 +69,10 @@ Ensure the following Python libraries are installed:
 Ensure the following R libraries are installed:
 
 - `coconatfly` *(installed through natmanager)* 👉 *https://natverse.org/coconatfly/*
-- `coconat`
-- `googlesheets4`
-- `fafbseg`
-- `dplyr`
+- `coconat` 👉 *https://natverse.org/coconat/*
+- `googlesheets4` 👉 *https://googlesheets4.tidyverse.org/*
+- `fafbseg` 👉 *https://natverse.org/fafbseg/*
+- `dplyr`👉 *https://dplyr.tidyverse.org/*
 
 Additionally, source the Aedes-specific helper file supplied by Greg.
 
