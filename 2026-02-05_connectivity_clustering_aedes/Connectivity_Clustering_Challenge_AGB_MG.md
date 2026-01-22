@@ -13,10 +13,10 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
    - Adjust synapse threshold as needed.
    - Choose upstream and/or downstream partners. *(For ALPNs only upstream partners)*
    - Ensure compatible query settings for synapse tables.
-   - Fetch synapse-level connectivity data using **fafbseg synapse connectivity** (not navis).
+   - Fetch synapse-level connectivity data using **fafbseg synapse connectivity** (not navis). *(Control batch size for speed and acceptance of query to the server)*
 
 3. 🔗 **Connectivity Matrix Construction**
-   - Fetch adjacency data using **fafbseg adjacency** (not navis).
+   - Fetch adjacency data using **fafbseg adjacency** (not navis). *(Control batch size for speed and acceptance of query to the server)*
    - Use navis for cosine clustering (adjacency matrix axes for source or target 
    matter). *sklearn cosine_similarity is another option*
 
