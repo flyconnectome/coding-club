@@ -1,4 +1,4 @@
-# 🧠 Coding Club Challenge: ALPN Connectivity-cosine Clustering (Python & R)
+# 🧠 Coding Club Challenge: ALPN Connectivity-cosine clustering (Python & R)
 
 This challenge introduces how to perform **connectivity-cosine clustering** on ALPNs using **Python and R**, focusing on synapse connectivity with sensory neurons. Participants will extract synaptic connectivity from the Aedes dataset and apply clustering and visualization methods to identify neuronal groups based on shared connectivity profiles.
 
@@ -35,19 +35,19 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
 1. 📚 **Fetch Metadata Retrieval**   
    - Retrieve neuron metadata from FlyTable / SeaTable.
 
-2. 🧠 **Connectivity Data Retrieval and Cosine similarity clustering**
-   - Use `cf_cosine_plot` 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
+2. 🧠 **Connectivity Data Retrieval and cosine similarity clustering**
+   - Use `cf_cosine_plot()` 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
    - Adjust threshold connectivity as needed.
    - Choose upstream and/or downstream partners. *(For ALPNs only upstream partners)*
-   - Fetch metadata and add clustering relevant informatio. *(e.g. dendid)*
+   - Fetch metadata and add clustering relevant information. *(e.g. dendid)*
    
 
 3. 📈 **Visualization**
-   - Plot clustered heatmaps, dendrograms.
+   - Plot heatmaps, dendrograms.
    - Save high-resolution figures suitable for presentations.
 
 4. 📊 **Reviewing Clustering**   
-   - Generate a spreadsheet for review.
+   - Generate a spreadsheet to review the ALPN clusters.
 ---
 
 ## ⚙️ Setup Instructions
@@ -68,7 +68,7 @@ Ensure the following Python libraries are installed:
 ### R
 Ensure the following R libraries are installed:
 
-- `coconatfly` *(installed through natmanager)*
+- `coconatfly` *(installed through natmanager)* 👉 *https://natverse.org/coconatfly/*
 - `coconat`
 - `googlesheets4`
 - `fafbseg`
