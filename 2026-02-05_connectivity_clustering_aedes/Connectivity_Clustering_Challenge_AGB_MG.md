@@ -39,7 +39,7 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
    - Use `cf_cosine_plot()` 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
    - Adjust synapse threshold as needed.
    - Choose upstream and/or downstream partners. *(For ALPNs only upstream partners)*
-   - Fetch metadata and add clustering relevant information. *(e.g. dendid)*
+   - Fetch metadata and add clustering relevant information. *(e.g. dendrogram order, groups)*
    
 
 3. 📈 **Visualization**
