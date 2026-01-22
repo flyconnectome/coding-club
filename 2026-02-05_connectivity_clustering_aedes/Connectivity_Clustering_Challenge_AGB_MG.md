@@ -10,7 +10,7 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
    - Retrieve neuron metadata from FlyTable / SeaTable.
 
 2. 🧠 **Connectivity Data Retrieval**
-   - Adjust threshold connectivity as needed.
+   - Adjust synapse threshold as needed.
    - Choose upstream and/or downstream partners. *(For ALPNs only upstream partners)*
    - Ensure compatible query settings for synapse tables.
    - Fetch synapse-level connectivity data using **fafbseg synapse connectivity** (not navis).
@@ -37,7 +37,7 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
 
 2. 🧠 **Connectivity Data Retrieval and cosine similarity clustering**
    - Use `cf_cosine_plot()` 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
-   - Adjust threshold connectivity as needed.
+   - Adjust synapse threshold as needed.
    - Choose upstream and/or downstream partners. *(For ALPNs only upstream partners)*
    - Fetch metadata and add clustering relevant information. *(e.g. dendid)*
    
