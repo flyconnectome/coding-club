@@ -37,6 +37,7 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
 
 2. 🧠 **Connectivity Data Retrieval and cosine similarity clustering**
    - Use `cf_cosine_plot()`to retrieve the data and run the cosine clustering 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
+  
       - Adjust synapse threshold as needed. *(default threshold=5)*
       - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or restrict it to sensory neuron connectivity)*
       - Fetch metadata for the neurons have been clustered and add clustering relevant information. *(e.g. dendrogram order, groups)*
