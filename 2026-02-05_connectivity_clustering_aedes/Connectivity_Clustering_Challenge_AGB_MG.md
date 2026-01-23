@@ -62,13 +62,13 @@ This challenge introduces how to perform **connectivity-cosine similarity cluste
 ### Python
 Ensure the following Python libraries are installed:
 
-- `sea-serpent`
-- `navis`
-- `fafbseg` *(modified version supplied)*
-- `matplotlib`
-- `seaborn`
-- `scipy`
-- `numpy`
+- `sea-serpent` 👉 *https://pypi.org/project/sea-serpent/*
+- `navis` 👉 *https://navis-org.github.io/navis/*
+- `fafbseg` *(modified version supplied)* 👉 *https://fafbseg-py.readthedocs.io/en/latest/source/api.html*
+- `matplotlib` 👉 *https://matplotlib.org/stable/index.html*
+- `seaborn` 👉 *https://seaborn.pydata.org*
+- `scipy` 👉 *https://docs.scipy.org/doc/scipy/reference/index.html#scipy-api*
+- `numpy` 👉 *https://numpy.org/doc/stable/reference/index.html#reference*
 
 ### R
 Ensure the following R libraries are installed:
