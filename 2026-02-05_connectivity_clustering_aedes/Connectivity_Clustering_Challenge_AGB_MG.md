@@ -40,8 +40,9 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
       - Use ids or regular expression to specify the class or superclass *(specified with an initial "/")* 
       - Adjust synapse threshold as needed. *(default threshold=5)*
       - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or preferably restrict it to sensory neuron connectivity)*
-      - Ensure that the `group` parameter is used.
-  - Fetch metadata for the neurons that have been clustered and add relevant clustering information. *(e.g. dendrogram order, groups)*
+      - Ensure that the `group` parameter is used.    
+   - Fetch metadata for the neurons that have been clustered and add relevant clustering information. *(e.g. dendrogram order, groups)*
+      
    
 
 3. 📈 **Visualization**
