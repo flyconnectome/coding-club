@@ -25,7 +25,7 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
 
 5. 📈 **Visualization**
    - Plot clustered heatmaps, dendrograms, and connectivity summaries.
-   - Save high-resolution figures suitable for presentations.
+   - Save high-resolution figures.
 
 4. 📊 **Reviewing Clustering**   
    - Generate a csv file for review.
@@ -36,16 +36,18 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
    - Retrieve neuron metadata from FlyTable / SeaTable excluding the following statuses: duplicate, tiny or fragment.
 
 2. 🧠 **Connectivity Data Retrieval and cosine similarity clustering**
-   - Use `cf_cosine_plot()`to retrieve the data and run the cosine clustering 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
-  
+   - Use `cf_cosine_plot()` 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*- 
+      - Use ids or regular expression to specify the class or superclass *(specified with an initial "/")* 
       - Adjust synapse threshold as needed. *(default threshold=5)*
-      - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or restrict it to sensory neuron connectivity)*
-      - Fetch metadata for the neurons have been clustered and add clustering relevant information. *(e.g. dendrogram order, groups)*
+      - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or preferably restrict it to sensory neuron connectivity)*
+      - Ensure that the `group` parameter is used.
+  - Fetch metadata for the neurons that have been clustered and add relevant clustering information. *(e.g. dendrogram order, groups)*
    
 
 3. 📈 **Visualization**
-   - Plot heatmaps, dendrograms.
-   - Save high-resolution figures suitable for presentations.
+   - Plot the dendrogram.
+   - Include root_id, type, group & side on the labels.
+   - Save high-resolution figures.
 
 4. 📊 **Reviewing Clustering**   
    - Generate a spreadsheet to review the ALPN clusters.
