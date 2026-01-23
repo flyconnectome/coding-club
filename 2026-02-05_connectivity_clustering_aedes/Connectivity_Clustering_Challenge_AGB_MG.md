@@ -36,7 +36,7 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
    - Retrieve neuron metadata from FlyTable / SeaTable excluding the following statuses: duplicate, tiny or fragment.
 
 2. 🧠 **Connectivity Data Retrieval and cosine similarity clustering**
-   - Use `cf_cosine_plot()` 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*- 
+   - Use `cf_cosine_plot()` 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
       - Use ids or regular expression to specify the class or superclass *(specified with an initial "/")* 
       - Adjust synapse threshold as needed. *(default threshold=5)*
       - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or preferably restrict it to sensory neuron connectivity)*
