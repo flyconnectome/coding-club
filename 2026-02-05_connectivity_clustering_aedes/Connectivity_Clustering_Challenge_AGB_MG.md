@@ -1,17 +1,17 @@
 # 🧠 Coding Club Challenge: ALPN Connectivity-cosine clustering (Python & R)
 
-This challenge introduces how to perform **connectivity-cosine clustering** on ALPNs using **Python and R**, focusing on their upstream connectivity with sensory neurons. Participants will extract synaptic connectivity from the Aedes dataset and apply clustering and visualization methods to identify neuronal groups based on shared connectivity profiles.
+This challenge introduces how to perform **connectivity-cosine clustering** on ALPNs using **Python and R**, focusing on their upstream connectivity and/or with sensory neurons only. Participants will extract synaptic connectivity from the *Aedes* dataset and apply clustering and visualization methods to identify neuronal groups based on shared connectivity profiles.
 
 ---
 
 ## 📊 Workflow Overview (Python)
    
 1. 📚 **Fetch Metadata Retrieval**
-   - Retrieve neuron metadata from FlyTable / SeaTable.
+   - Retrieve neuron metadata from FlyTable / SeaTable excluding the following statuses: duplicate, tiny or fragment.
 
 2. 🧠 **Connectivity Data Retrieval**
    - Adjust synapse threshold as needed.
-   - Choose upstream and/or downstream partners. *(For ALPNs only upstream partners)*
+   - Choose upstream and/or downstream partners. *(For ALPN clustering use only upstream partners)*
    - Ensure compatible query settings for synapse tables.
    - Fetch synapse-level connectivity data using **fafbseg synapse connectivity** (not navis). *(Control batch size for speed and acceptance of query to the server)*
 
@@ -33,13 +33,13 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
 ## 📊 Workflow Overview (R)
    
 1. 📚 **Fetch Metadata Retrieval**   
-   - Retrieve neuron metadata from FlyTable / SeaTable.
+   - Retrieve neuron metadata from FlyTable / SeaTable excluding the following statuses: duplicate, tiny or fragment.
 
 2. 🧠 **Connectivity Data Retrieval and cosine similarity clustering**
-   - Use `cf_cosine_plot()` 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
-   - Adjust synapse threshold as needed.
-   - Choose upstream and/or downstream partners. *(For ALPNs only upstream partners)*
-   - Fetch metadata and add clustering relevant information. *(e.g. dendrogram order, groups)*
+   - Use `cf_cosine_plot()`to retrieve the data and run the cosine clustering 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
+      - Adjust synapse threshold as needed. *(default threshold=5)*
+      - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or restrict it to sensory neuron connectivity)*
+      - Fetch metadata for the neurons have been clustered and add clustering relevant information. *(e.g. dendrogram order, groups)*
    
 
 3. 📈 **Visualization**
