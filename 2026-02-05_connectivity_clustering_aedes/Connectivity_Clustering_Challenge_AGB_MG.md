@@ -46,7 +46,7 @@ This challenge introduces how to perform **connectivity-cosine clustering** on A
 
 3. 📈 **Visualization**
    - Plot the dendrogram.
-   - Include root_id, type, group & side on the labels.
+   - Include root_id, type, group & side on the dendrogram labels.
    - Save high-resolution figures.
 
 4. 📊 **Reviewing Clustering**   
