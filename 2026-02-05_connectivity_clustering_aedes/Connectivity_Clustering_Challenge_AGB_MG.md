@@ -138,7 +138,7 @@ matching_scores = pd.DataFrame(S, index=adjacency.index, columns=adjacency.colum
 
 - Always confirm you are working with the **wclee_aedes_brain** dataset.
 - The clustering always runs against the latest materialised version of the synapse table.
-  -the synapse table is updated every day at 14:10 UK time.
+   - the synapse table is updated every day at 14:10 UK time. 
 - Avoid cached or materialized views that are unsupported for synapse tables.
 - Save intermediate connectivity matrices.
 - Keep in mind that the column names will differ from those in the aedes table when fetching the metadata from the clustering; renaming is required before generating the spreadsheet for review.
