@@ -11,7 +11,7 @@ This challenge introduces how to perform **connectivity-cosine similarity cluste
 
 2. 🧠 **Connectivity Data Retrieval**
    - Adjust synapse threshold as needed.
-   - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or preferably restrict it to sensory neuron connectivity)*
+   - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or restrict it to sensory neuron connectivity)*
    - Ensure compatible query settings for synapse tables.
    - Fetch synapse-level connectivity data using **fafbseg synapse connectivity** (not navis). *(Control batch size for speed and acceptance of query to the server)*
 
@@ -25,6 +25,7 @@ This challenge introduces how to perform **connectivity-cosine similarity cluste
 
 5. 📈 **Visualization**
    - Plot clustered heatmaps, dendrograms, and connectivity summaries.
+   - Include root_id, type, group & side on the dendrogram labels.
    - Save high-resolution figures.
 
 4. 📊 **Reviewing Clustering**   
@@ -37,9 +38,9 @@ This challenge introduces how to perform **connectivity-cosine similarity cluste
 
 2. 🧠 **Connectivity Data Retrieval and cosine similarity clustering**
    - Use `cf_cosine_plot()` function to fetch partner connectivity data & run the cosine clustering 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
-      - Use ids or regular expression to specify the class or superclass *(specified with an initial "/")* 
+      - Use ids or regular expression to specify the class or superclass of the neurons of interest *(specified with an initial "/")* 
       - Adjust synapse threshold as needed. *(default threshold=5)*
-      - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or preferably restrict it to sensory neuron connectivity)*
+      - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or restrict it to sensory neuron connectivity)*
       - Ensure that the `group` parameter is used.    
    - Fetch metadata for the neurons that have been clustered and add relevant clustering information. *(e.g. dendrogram order, groups)*
       
