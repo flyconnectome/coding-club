@@ -64,7 +64,7 @@ Ensure the following Python libraries are installed:
 
 - `sea-serpent` 👉 *https://pypi.org/project/sea-serpent/*
 - `navis` 👉 *https://navis-org.github.io/navis/*
-- `fafbseg` *(modified version supplied)* 👉 *https://fafbseg-py.readthedocs.io/en/latest/source/api.html*
+- `fafbseg` *(modified "Synapses.py" file supplied)* 👉 *https://fafbseg-py.readthedocs.io/en/latest/source/api.html*
 - `matplotlib` 👉 *https://matplotlib.org/stable/index.html*
 - `seaborn` 👉 *https://seaborn.pydata.org*
 - `scipy` 👉 *https://docs.scipy.org/doc/scipy/reference/index.html#scipy-api*
@@ -94,7 +94,7 @@ choose_aedes()
 
 ### 🔗 Synapse Table Access (Python)
 - To access the synapse table in Python, you **must**:
-  - Use the **modified fafbseg library supplied**, **OR**
+  - Use the **modified fafbseg file supplied**, **OR**
   - Remove references to unsupported columns (e.g. *synaptic cleft score*).
 
 - When fetching synaptic tables, you **must disable unsupported views** by using:
