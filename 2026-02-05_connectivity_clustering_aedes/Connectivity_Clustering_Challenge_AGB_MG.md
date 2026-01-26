@@ -10,7 +10,7 @@ This challenge introduces how to perform **connectivity-cosine similarity cluste
    - Retrieve neuron metadata from FlyTable / SeaTable excluding the following statuses: duplicate, tiny or fragment.
 
 2. 🧠 **Connectivity Data Retrieval**
-   - Adjust synapse threshold as needed.
+   - Adjust synapse threshold if needed.
    - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or restrict it to sensory neuron connectivity)* Try both and compare the resulting dendrograms.
    - Ensure compatible query settings for synapse tables.
    - Fetch synapse-level connectivity data using **fafbseg synapse connectivity** (not navis). *(Control batch size for speed and acceptance of query to the server)*
@@ -39,7 +39,7 @@ This challenge introduces how to perform **connectivity-cosine similarity cluste
 2. 🧠 **Connectivity Data Retrieval and cosine similarity clustering**
    - Use `cf_cosine_plot()` function to fetch partner connectivity data & run the cosine clustering 👉 *https://natverse.org/coconatfly/reference/cf_cosine_plot.html*
       - Use ids or regular expression to specify the class or superclass of the neurons of interest *(specified with an initial "/")* 
-      - Adjust synapse threshold as needed. *(default threshold=5)*
+      - Adjust synapse threshold if needed. *(default threshold=5)*
       - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or restrict it to sensory neuron connectivity)* Try both and compare the resulting dendrograms.
       - Ensure that the `group` parameter is used.    
    - Fetch metadata for the neurons that have been clustered and add relevant clustering information. *(e.g. dendrogram order, groups)*
