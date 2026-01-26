@@ -12,7 +12,7 @@ This challenge introduces how to perform **connectivity-cosine similarity cluste
 2. 🧠 **Connectivity Data Retrieval**
    - Adjust synapse threshold if needed.
    - Choose upstream and/or downstream partners. *(For ALPN clustering use upstream partners or restrict it to sensory neuron connectivity)* Try both and compare the resulting dendrograms.
-   - Ensure compatible query settings for synapse tables.
+   - Ensure compatible query settings for synapse tables. *(see details on Synapse Table Access section below)*
    - Fetch synapse-level connectivity data using **fafbseg synapse connectivity** (not navis). *(Control batch size for speed and acceptance of query to the server)*
 
 3. 🔗 **Connectivity Matrix Construction**
