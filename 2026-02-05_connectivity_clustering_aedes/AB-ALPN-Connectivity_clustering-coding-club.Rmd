@@ -1,0 +1,130 @@
+---
+title: "ALPN-Connectivity-clustering-coding-club"
+author: "Anastasia Bouchorikou"
+date: "2026-01-30"
+output: html_document
+---
+
+#Load libraries needed
+
+```{r}
+
+library(fafbseg)
+library(natverse)
+library(dplyr)
+library(tidyverse)
+library(readr)
+library(coconatfly)
+library(coconat)
+library(googlesheets4)
+library(dendextend)
+
+
+source("R/funs/aedes-dataset-funs.R")
+choose_aedes()
+
+```
+
+#Select root ids of ALPNs
+
+```{r}
+
+aedes=flytable_query("select * from aedes_main WHERE status NOT IN ('duplicate','fragment','tiny')")
+
+alpns <- aedes %>%
+  filter(class=="ALPN")
+
+```
+
+#Run connectivity clustering with upstream partners for ALPNs
+
+```{r}
+
+coclus_up <- cf_cosine_plot(cf_ids("/class:ALPN", datasets='aedes'), partners = 'in', group=TRUE, labRow = "{id}_{type}_{group}_{side}")
+
+```
+
+
+#Extract the dendrogram from the connectivity clustering 
+```{r}
+
+ids_dend <- coclus_up$Rowv
+
+ids_hc <- as.hclust(ids_dend)
+```
+
+#Let's decide how many clusters we want to cut the dendrogram by plotting it and then cut it into the number of choice
+```{r}
+
+plot(ids_hc)
+
+clusters <- cutree(ids_hc, k = 12)
+
+order_ids <- ids_hc$labels[ids_hc$order]
+
+```
+
+#Fetch metadata for the clustered ids
+
+```{r}
+
+metadata <- cf_meta(ids = order_ids) 
+
+```
+
+
+#On the clusters df the clustered ids are in the format ab:root_id so we need to strip the ab prefix in order to then merge the information from the clustering to the metadata df
+```{r}
+
+names(clusters) <- sub("^ab:", "", names(clusters))
+
+metadata <- metadata %>%
+  mutate(cluster = clusters[as.character(id)])
+
+```
+
+#Assign labels
+```{r}
+
+metadata_labels <- metadata %>% 
+  arrange(match(id, labels(ids_dend))) %>%
+  mutate(label = paste(id, type, group, side, sep = "_"))
+
+labels(ids_hc) <- metadata_labels$label 
+
+```
+
+#Plot the dendrogram with the labels
+```{r}
+
+pdf("/Users/anastasiabouchorikou/aedes/2025aedes/Anastasia/ALPN_connectivity_clustering.pdf",
+    width = 40, 
+    height = 10)
+
+par(mar = c(5, 3, 1, 0), family = "Courier")
+
+plot(ids_hc, 
+     hang = -.01,
+     cex = 0.5,
+     lwd = 0.6,
+     main = "ALPN Connectivity Clustering")
+
+dev.off()
+
+```
+
+
+#Generate Google spreadsheet with clustering information
+```{r}
+
+#first authenticate your google account
+gs4_auth()
+
+#then create the google sheet using the metadata df with the cluster information
+ALPN_connectivity_clustering_gsheet <- gs4_create(
+  name = "ALPN conectivity clustering aedes - Februrary 2025",
+  sheets = list(metadata)
+)
+
+```
+
