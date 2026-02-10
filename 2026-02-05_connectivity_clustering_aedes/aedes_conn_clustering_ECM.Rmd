@@ -1,0 +1,87 @@
+---
+title: "Aedes Conn Clustering"
+author: "E Marin"
+date: "2026-02-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries
+
+```{r}
+library(natverse)
+library(coconatfly)
+library(coconat)
+library(googlesheets4)
+library(fafbseg)
+library(dplyr)
+library(shiny)
+
+source("/Users/elizabethmarin/Documents/GitHub/2025aedes/R/funs/aedes-dataset-funs.R")
+```
+
+## Retrieve Aedes metadata
+
+```{r}
+bodyann_aedes = flytable_list_rows(table = "aedes_main", base = "aedes", chunksize = 10000)
+```
+
+# Subset Aedes metadata to valid neurons
+
+```{r}
+bodyann_aedes %>%
+  filter(!grepl("duplicate", status)) %>%
+  filter(!grepl("fragment", status)) %>%
+  filter(!grepl("tiny", status)) -> bodyann_aedes
+```
+
+# Subset to desired neurons (ALPNs)
+
+```{r}
+bodyann_aedes %>%
+  filter(class %in% "ALPN") -> alpn
+
+nrow(alpn)
+
+alpn$root_id -> alpn_id
+```
+
+## Retrieve connectivity data and cluster to produce dendrogram with desired labels
+
+```{r}
+choose_aedes()
+cf_cosine_plot(
+  ids = cf_ids(aedes=alpn_id),
+  threshold = 2,
+  partners = "inputs",
+  labRow = "{id}_{type}_{group}_{side}",
+  group = "type",
+  heatmap = TRUE,
+  matrix = FALSE,
+  interactive = FALSE,
+  drop_dataset_prefix = FALSE,
+  keep.all.meta = TRUE,
+  min_datasets = Inf,
+  nas = c("zero", "drop"),
+  method = c("ward.D", "single", "complete", "average", "mcquitty", "median", "centroid",
+    "ward.D2")
+) -> alpn_conn
+
+# Note: Clusters look much nicer when including inputs only
+```
+# Anastasia's method
+```{r}
+choose_aedes()
+cf_cosine_plot(cf_ids("/class:ALPN", datasets='aedes'), partners = 'in', group=TRUE, labRow = "{id}_{type}_{group}_{side}") -> alpn_conn
+```
+
+# Marina's method
+```{r}
+choose_aedes()
+cf_cosine_plot(cf_ids(aedes='class:ALPN.*'))
+```
+
+
