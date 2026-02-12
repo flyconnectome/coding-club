@@ -1,0 +1,198 @@
+---
+title: "alpn_connectivity_clustering_MG"
+author: "Marina Gkantia"
+date: "2026-01-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Load the libraries
+
+```{r}
+library(dplyr)
+library(fafbseg)
+library(coconatfly)
+library(coconat)
+library(googlesheets4)
+library(clipr)
+source("/aedes-dataset-funs.R")
+choose_aedes()
+```
+
+#Retriece aedes metadata
+
+```{r}
+aedes=flytable_query("select * from aedes_main WHERE status NOT IN ('duplicate','fragment','tiny')")
+```
+
+#Filter for the ALPNs & fetch alpn rootids
+
+```{r}
+aedes %>% 
+  filter(class=="ALPN")->alpns
+
+alpns %>% 
+  pull(root_id)->alpn_ids
+  
+```
+
+#Are there any duplicates?
+
+```{r}
+alpns %>% 
+  filter(duplicated(alpns$root_id))
+```
+
+#Run the cosine clustering
+```{r}
+
+cf_cosine_plot(cf_ids(aedes='class:ALPN.*'), group = 'type', partners = 'i',threshold = 2, labRow = "{id}_{group}_{type}_{side}",drop_dataset_prefix = T, heatmap = F,interactive = F)->alpns.hc
+
+#or use the ids instead
+#cf_cosine_plot(cf_ids(aedes=alpn_ids), group = 'type', partners = 'i',threshold = 2, labRow = "{id}_{group}_{type}_{side}",drop_dataset_prefix = T, heatmap = F,interactive = F)->alpns.hc1
+
+```
+
+#Fetch metadata for the neurons that have been clustered
+
+```{r}
+alpn_meta = cf_meta(alpns.hc)
+alpn_meta
+```
+
+#Add all the relevant clustering info (dendid, group)
+
+```{r}
+alpn_meta1 = coconat::add_cluster_info(alpn_meta, alpns.hc, h = 1.5)
+alpn_meta1
+```
+
+#Rename the columns and select only the necessary ones
+
+```{r}
+alpn_meta1 %>%
+  rename(root_id=id) %>% 
+  rename(superclass=class) %>% 
+  rename(class=subclass) %>% 
+  rename(subclass=subsubclass) %>% 
+  select(-flywire_type,-instance)->alpn_meta2
+alpn_meta2
+```
+
+#Create a Googlesheet for review
+
+```{r}
+gs4_auth()
+
+alpns_conn <- gs4_create("ALPNs_connectivity_clustering_120226")
+sheet_write(alpn_meta2,ss=alpns_conn)
+
+```
+
+#Plot the dendrogram and add labels
+
+
+```{r}
+
+pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/pn_connectivity_dendrograms/pnhc120226.pdf"), 
+        width = 80, 
+        height = 10, 
+        family = 'Courier')
+    
+    par(mar = c(5,3,1,0))
+a<-plot(alpns.hc,labels=paste(alpn_meta2$root_id, alpn_meta2$type, alpn_meta2$group, alpn_meta2$side, sep = "_"),
+         hang = -3, 
+         cex = 0.5,
+         lwd = 0.6)
+abline(h=1.5) #add a reference line to the dendrogram showing the cut height
+dev.off()
+```
+
+#Restrict the clustering to sensory neuron upstream connectivity 
+
+```{r}
+#Fetch partner connectivity data
+
+multi_connection_table(cf_ids(aedes='class:ALPN.*'),  group = 'type', partners = 'i')->con_data
+con_data
+```
+
+#Filter for sensory neuron upstream connectivity
+
+```{r}
+con_data %>% 
+  filter(class=="sensory") %>% 
+  cf_cosine_plot(group = 'type',threshold = 1, labRow = "{id}_{group}_{type}_{side}",drop_dataset_prefix = T, heatmap = F,interactive = F)->alpns.hc1
+```
+
+#Fetch metadata for the neurons that have been clustered
+
+```{r}
+cf_meta(alpns.hc1)->alpn_data
+alpn_data
+```
+
+
+#Add all the relevant clustering info (dendid, group)
+
+```{r}
+alpn_data1 = coconat::add_cluster_info(alpn_data, alpns.hc1, h = 1.5)
+alpn_data1
+```
+
+#Rename the columns and select only the necessary ones
+
+```{r}
+alpn_data1 %>%
+  rename(root_id=id) %>% 
+  rename(superclass=class) %>% 
+  rename(class=subclass) %>% 
+  rename(subclass=subsubclass) %>% 
+  select(-flywire_type,-instance)->alpn_data2
+```
+
+#Plot the dendrogram and add labels
+
+```{r}
+pdf(file =  ("/Users/marinagkantia/Documents/GitHub/2025aedes/R/Marina/pn_connectivity_dendrograms/pnhc120226_osn_input.pdf"), 
+        width = 80, 
+        height = 10, 
+        family = 'Courier')
+
+
+    
+    par(mar = c(5,3,1,0))
+a<-plot(alpns.hc1, labels=paste(alpn_data2$root_id, alpn_data2$type, alpn_data2$group, alpn_data2$side, sep = "_"), 
+         hang = -.01, 
+         cex = 0.5,
+        lwd = 0.6)
+abline(h=1.5)
+dev.off()
+
+```
+
+#Create a Google sheet to review the clusters 
+
+```{r}
+spreadsheet<-"https://docs.google.com/spreadsheets/d/1gzkJYA0urBu1ECBPs0wOx5KzId55X6tjkYoSMg6nRu8/edit?usp=sharing"
+sheet_write(alpn_data2,ss=spreadsheet, sheet = "sensory")
+```
+
+#Find out which ids are not included when you restrict the clustering to sensory neuron connectivity
+```{r}
+alpn_meta2 %>% 
+  pull(root_id)->alpns1
+
+alpn_data2 %>% 
+  pull(root_id)->alpns2
+
+
+setdiff(alpns1,alpns2) ->diff
+
+dput(diff)
+
+```
+
