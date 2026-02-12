@@ -18,7 +18,7 @@ library(coconatfly)
 library(coconat)
 library(googlesheets4)
 library(clipr)
-source("/aedes-dataset-funs.R")
+source("aedes-dataset-funs.R")
 choose_aedes()
 ```
 
@@ -66,7 +66,7 @@ alpn_meta
 #Add all the relevant clustering info (dendid, group)
 
 ```{r}
-alpn_meta1 = coconat::add_cluster_info(alpn_meta, alpns.hc, h = 1.5)
+alpn_meta1 = add_cluster_info(alpn_meta, alpns.hc, h = 1.5)
 alpn_meta1
 ```
 
