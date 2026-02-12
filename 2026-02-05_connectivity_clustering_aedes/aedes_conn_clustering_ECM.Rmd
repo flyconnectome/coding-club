@@ -12,13 +12,15 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Load libraries
 
 ```{r}
+library(fafbseg)
 library(natverse)
+library(dplyr)
+library(tidyverse)
+library(readr)
 library(coconatfly)
 library(coconat)
 library(googlesheets4)
-library(fafbseg)
-library(dplyr)
-library(dendroextras)
+library(dendextend)
 
 source("/Users/elizabethmarin/Documents/GitHub/2025aedes/R/funs/aedes-dataset-funs.R")
 ```
@@ -89,8 +91,53 @@ Plot the dendrogram.
 Include root_id, type, group & side on the dendrogram labels.
 Save high-resolution figures
 
-# Do annotations need to be added? What about reordering?
-# Save high-res figure
+# Extract the dendrogram from the connectivity clustering (Anastasia)
+
+```{r}
+ids_dend <- alpn_conn$Rowv
+
+ids_hc <- as.hclust(ids_dend)
+```
+
+# Plot the dendrogram 
+# Cut by desired number of clusters or height (Anastasia). 
+# Order the ids according to the dendrogram.
+
+```{r}
+plot(ids_hc)
+
+clusters <- cutree(ids_hc, h = 2.0)
+# I opted to use a cut height, h, instead of a number of clusters, k
+
+order_ids <- ids_hc$labels[ids_hc$order]
+```
+# Add annotations to the reordered list of ids to create a dataframe (Anastasia)
+
+```{r}
+metadata <- cf_meta(ids = order_ids) 
+```
+
+# Strip the ab prefix from the clusters ids so that the two dataframes can be joined (Anastasia)
+# This also creates a "cluster" column in the metadata datafrome.
+
+```{r}
+names(clusters) <- sub("^ab:", "", names(clusters))
+
+metadata <- metadata %>%
+  mutate(cluster = clusters[as.character(id)])
+```
+
+# Assign desired labels from the metadata dataframe, {id}_{type}_{group}_{side} (Anastasia)
+
+```{r}
+metadata_labels <- metadata %>% 
+  arrange(match(id, labels(ids_dend))) %>%
+  mutate(label = paste(id, type, group, side, sep = "_"))
+
+labels(ids_hc) <- metadata_labels$label 
+```
+
+# Save high-res figure (Anastasia)
 ```{r}
 pdf(file =  ("~/aedes_alpn_conn_dendrogram_11_02_2026.pdf"), 
         width = 80, 
@@ -98,15 +145,16 @@ pdf(file =  ("~/aedes_alpn_conn_dendrogram_11_02_2026.pdf"),
         family = 'Courier')
     
 par(mar = c(5,3,1,0))
-alpn.hc.plot<-plot(alpn_conn, labels=paste(aedes_alpns_ordered$root_id, aedes_alpns_ordered$side, aedes_alpns_ordered$group, aedes_alpns_ordered$axon_tract, aedes_alpns_ordered$type, sep = "_"), 
+
+alpn.hc.plot<-plot(ids_hc, 
          hang = -.01, 
          cex = 0.5,
          lwd = 0.6)
+
 dev.off()
 ```
 
-
-# Save high-res figure
+# Save high-res figure (template code)
 ```{r}
 pdf(file =  ("~/aedes_alpn_mALT_nblast_dendrogram_1000_14_12_2025.pdf"), 
         width = 80, 
@@ -121,15 +169,7 @@ alpn.hc.plot<-plot(alpn.hc, labels=paste(aedes_alpns_ordered$root_id, aedes_alpn
 dev.off()
 ```
 
-## Generate a spreadsheet to review the ALPN clusters
-
-# Add desired columns to the dataframe
-
-```{r}
-
-```
-
-# Create a Google sheet from the dataframe
+# Create a Google sheet from the dataframe (Anastasia)
 
 https://github.com/tidyverse/googlesheets4
 gs4_create() creates a brand new Google Sheet and can optionally send some initial data
@@ -138,9 +178,13 @@ sheet_write() (over)writes a whole data frame into a (work)sheet within a (sprea
 If you provide a data frame, it is used to populate the cells of a sheet and to set sheet dimensions (number of rows and columns). The header row also gets special treatment. The sheet inherits the name of the data frame, where possible.
 
 ```{r}
-ss3 <- gs4_create(
-  "aedes-alpn-clustering-2026-02-11",
-  sheets = my_data
+# Authenticate your google account
+gs4_auth()
+
+# Create the google sheet using the metadata df with the cluster information
+alpn_connectivity_clusters_gsheet <- gs4_create(
+  name = "Aedes ALPN connectivity clustering 2026-02-12",
+  sheets = list(metadata)
 )
 ```
 
