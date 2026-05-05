@@ -40,7 +40,7 @@ bodyann_aedes %>%
   filter(!grepl("tiny", status)) -> bodyann_aedes
 ```
 
-# Subset to desired neurons (ALPNs)
+# Subset to desired neurons for clustering (ALPNs)
 
 ```{r}
 bodyann_aedes %>%
@@ -51,7 +51,26 @@ nrow(alpn)
 alpn$root_id -> alpn_id
 ```
 
+# Alternative (Marina)
+
+```{r}
+bodyann_aedes %>% 
+  filter(class=="ALPN") -> alpn
+
+alpn %>% 
+  pull(root_id)->alpn_ids
+```
+
+#Are there any duplicates? (Marina)
+
+```{r}
+alpn %>% 
+  filter(duplicated(alpn$root_id))
+```
+
 ## Retrieve connectivity data and cluster to produce dendrogram with desired labels
+# Note: Clusters look much nicer when including inputs only
+# To restrict partners to class=OSN - need separate multi_connection_table
 
 ```{r}
 choose_aedes()
@@ -63,7 +82,7 @@ cf_cosine_plot(
   group = "type",
   heatmap = TRUE,
   matrix = FALSE,
-  interactive = FALSE,
+  interactive = TRUE,
   drop_dataset_prefix = FALSE,
   keep.all.meta = TRUE,
   min_datasets = Inf,
@@ -72,7 +91,9 @@ cf_cosine_plot(
     "ward.D2")
 ) -> alpn_conn
 
-# Note: Clusters look much nicer when including inputs only
+# to see the interactive plot
+alpn_conn
+
 ```
 # Anastasia's method
 ```{r}
@@ -82,14 +103,84 @@ cf_cosine_plot(cf_ids("/class:ALPN", datasets='aedes'), partners = 'in', group=T
 
 # Marina's method
 ```{r}
-choose_aedes()
-cf_cosine_plot(cf_ids(aedes='class:ALPN.*'))
+cf_cosine_plot(cf_ids(aedes='class:ALPN.*'), group = 'type', partners = 'i',threshold = 2, labRow = "{id}_{group}_{type}_{side}", drop_dataset_prefix = T, heatmap = F, interactive = F) -> alpns.hc
+
+#or use the ids instead
+#cf_cosine_plot(cf_ids(aedes=alpn_ids), group = 'type', partners = 'i',threshold = 2, labRow = "{id}_{group}_{type}_{side}",drop_dataset_prefix = T, heatmap = F,interactive = F)->alpns.hc1
 ```
 
+#Fetch metadata for the neurons that have been clustered - Marina
+
+```{r}
+alpn_meta = cf_meta(alpns.hc)
+alpn_meta
+```
+# Add all the relevant clustering info (dendid, group) - Marina
+
+```{r}
+alpn_meta1 = add_cluster_info(alpn_meta, alpns.hc, h = 1.5)
+alpn_meta1
+```
+#Rename the columns and select only the necessary ones
+
+```{r}
+alpn_meta1 %>%
+  rename(root_id=id) %>% 
+  rename(superclass=class) %>% 
+  rename(class=subclass) %>% 
+  rename(subclass=subsubclass) %>% 
+  select(root_id, superclass, class, subclass)->alpn_meta2
+alpn_meta2
+```
+
+#Create a Googlesheet for review
+
+```{r}
+gs4_auth()
+
+alpns_conn <- gs4_create("Aedes ALPN conn cluster 2026-02-12")
+sheet_write(alpn_meta2,ss=alpns_conn)
+
+```
 ## Plot the dendrogram, changing labels to desired annotations
 Plot the dendrogram.
 Include root_id, type, group & side on the dendrogram labels.
 Save high-resolution figures
+
+Can use cf_meta on the hc dendrogram directly
+
+# Can you just plot the dendrogram directly? Something like this?
+
+```{r}
+pdf(file =  ("~/aedes_alpn_mALT_nblast_dendrogram_1000_14_12_2025.pdf"), 
+        width = 80, 
+        height = 10, 
+        family = 'Courier')
+    
+par(mar = c(5,3,1,0))
+
+alpn.hc.plot<-cf_cosine_plot(
+  ids = cf_ids(aedes=alpn_id),
+  threshold = 2,
+  partners = "inputs",
+  labRow = "{id}_{type}_{group}_{side}",
+  group = "type",
+  heatmap = TRUE,
+  matrix = FALSE,
+  interactive = TRUE,
+  drop_dataset_prefix = FALSE,
+  keep.all.meta = TRUE,
+  min_datasets = Inf,
+  nas = c("zero", "drop"),
+  method = c("ward.D", "single", "complete", "average", "mcquitty", "median", "centroid",
+    "ward.D2"), 
+         hang = -.01, 
+         cex = 0.5,
+         lwd = 0.6)
+
+dev.off()
+```
+
 
 # Extract the dendrogram from the connectivity clustering (Anastasia)
 
@@ -182,9 +273,23 @@ If you provide a data frame, it is used to populate the cells of a sheet and to 
 gs4_auth()
 
 # Create the google sheet using the metadata df with the cluster information
-alpn_connectivity_clusters_gsheet <- gs4_create(
-  name = "Aedes ALPN connectivity clustering 2026-02-12",
-  sheets = list(metadata)
-)
+alpns_conn <- gs4_create("Aedes ALPN connectivity clustering 2026-02-12")
+sheet_write(alpn_meta2,ss=alpns_conn)
 ```
 
+## Restrict the clustering to sensory neuron upstream connectivity (Marina)
+
+```{r}
+#Fetch partner connectivity data
+
+multi_connection_table(cf_ids(aedes='class:ALPN.*'),  group = 'type', partners = 'i')->con_data
+con_data
+```
+
+#Filter for sensory neuron upstream connectivity
+
+```{r}
+con_data %>% 
+  filter(class=="sensory") %>% 
+  cf_cosine_plot(group = 'type',threshold = 1, labRow = "{id}_{group}_{type}_{side}",drop_dataset_prefix = T, heatmap = F,interactive = F)->alpns.hc1
+```
