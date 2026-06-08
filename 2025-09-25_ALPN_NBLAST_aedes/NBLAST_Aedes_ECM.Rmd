@@ -17,7 +17,9 @@ library(fafbseg)
 library(dplyr)
 library(nat.nblast)
 library(dendroextras)
-source("/Users/elizabethmarin/Documents/GitHub/2025aedes/R/funs/aedes-dataset-funs.R")
+library(aedes)
+register_aedes_coconat()
+#source("/Users/elizabethmarin/Documents/GitHub/2025aedes/R/funs/aedes-dataset-funs.R")
 ```
 
 # Retrieve Aedes metadata and filter for ALPNs of appropriate status
