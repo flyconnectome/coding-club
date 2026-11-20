@@ -9,7 +9,7 @@ This challenge introduces how to plot a heatmap showing the normalised sensory i
 1. **Read in connectivity information**
 
 2. **Process connectivity information**
-- Filter the neurons of interest
+   - Filter the neurons of interest
       -Which postsynaptic neurons should be included? 
       -Which presynaptic neurons should be included?
       -Do I need to adjust the synapse threshold? *(default threshold=5)*
