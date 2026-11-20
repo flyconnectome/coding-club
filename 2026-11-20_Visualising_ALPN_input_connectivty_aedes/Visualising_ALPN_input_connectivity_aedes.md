@@ -20,7 +20,7 @@ This challenge introduces how to plot a heatmap showing the normalised **sensory
 4. **Normalise the connectivity information**
 
 5. **Reshape from long to wide format & convert to a matrix**
--pivot_wider()
+   - pivot_wider()
 
 6. **Plot a heatmap**
 
