@@ -15,7 +15,7 @@ This challenge introduces how to plot a heatmap showing the normalised **sensory
      - Do I need to adjust the synapse threshold? *(default threshold = 5)*
 
 3. **Group inputs**
--What features should we group the inputs by?
+   - What features should we group the inputs by?
 
 4. **Normalise the connectivity information**
 
