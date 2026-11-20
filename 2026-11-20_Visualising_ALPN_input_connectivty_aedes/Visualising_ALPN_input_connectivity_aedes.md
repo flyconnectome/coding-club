@@ -25,7 +25,8 @@ This challenge introduces how to plot a heatmap showing the normalised **sensory
 6. **Plot a heatmap**
 
 
-##Bonus
+## Bonus
+
 **Plot a combined heatmap of sensory and Antennal Lobe Local Neuron inputs to the ALPNs**
 
 **Add an annotation to the heatmap to highlight a feature of interest**
