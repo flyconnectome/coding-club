@@ -1,4 +1,4 @@
-# 🧠 Coding Club Challenge: Generating a Heatmap to Visualise Input Connectivity of Antennal Lobe Projection Neurons in aedes
+# Coding Club Challenge: Generating a Heatmap to Visualise Input Connectivity of Antennal Lobe Projection Neurons in aedes
 
 This challenge introduces how to plot a heatmap showing the normalised **sensory inputs** to ALPNs in aedes without using the inbuilt functions - i.e. cf_cosine_plot().
 
