@@ -17,7 +17,7 @@ This challenge introduces how to plot a heatmap showing the normalised sensory i
 3. **Group inputs**
 -What features should we group the inputs by?
 
-4.**Normalise the connectivity information**
+4. **Normalise the connectivity information**
 
 5. **Reshape from long to wide format & convert to a matrix**
 -pivot_wider()
