@@ -53,7 +53,7 @@ Ensure the following R libraries are installed:
 - `coconat` 👉 *https://natverse.org/coconat/*
 - `fafbseg` 👉 *https://natverse.org/fafbseg/*
 - `tidyverse`👉 *https://tidyverse.org/packages/*
--`ComplexHeatmap`👉 *https://jokergoo.github.io/ComplexHeatmap-reference/book/*
+- `ComplexHeatmap`👉 *https://jokergoo.github.io/ComplexHeatmap-reference/book/*
 
 ---
 
